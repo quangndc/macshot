@@ -20,7 +20,7 @@ Native macOS screenshot tool achieving full feature parity with WinShot (Windows
 | [01 - Project Setup](./phase-01-project-setup.md) | completed | 100% |
 | [02 - Capture Engine](./phase-02-capture-engine.md) | pending | 0% |
 | [03 - Design & Wireframes](./phase-03-design-wireframes.md) | pending | 0% |
-| [04 - Annotation Canvas](./phase-04-annotation-canvas.md) | pending | 0% |
+| [04 - Annotation Canvas](./phase-04-annotation-canvas.md) | completed | 100% |
 | [05 - Editor UI](./phase-05-editor-ui.md) | pending | 0% |
 | [06 - Export System](./phase-06-export-system.md) | pending | 0% |
 | [07 - System Integration](./phase-07-system-integration.md) | pending | 0% |
