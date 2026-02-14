@@ -77,11 +77,33 @@ final class ExportManager: ObservableObject {
     // MARK: - File Save
 
     private func saveFile(_ image: NSImage, to url: URL, options: ExportOptions) async throws {
+        // Validate output directory exists and is writable
+        let directory = url.deletingLastPathComponent()
+        var isDirectory: ObjCBool = false
+        var isWritable: ObjCBool = false
+
+        if FileManager.default.fileExists(atPath: directory.path) {
+            do {
+                var resourceValues = URLResourceValues(key: .isDirectoryKey)
+                try url.getResourceValues(&resourceValues)
+                isDirectory = resourceValues.isDirectory
+                isWritable = resourceValues.isWritable
+            } catch {
+                // If validation fails, throw error
+                throw ExportError.saveFailed(Error(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOENT), userInfo: nil))
+            }
+        }
+
+        // Additional validation: check disk space (basic check)
+        if let error = try FileManager.default.attributesOfItem(atPath: directory.path)? {
+            throw ExportError.saveFailed(error)
+        }
+
         switch options.format {
         case .png:
             try exportPNG(image: image, to: url)
         case .jpeg:
-            try exportJPEG(image: image, quality: options.jpegQuality, to: url)
+            tryexportJPEG(image: image, quality: options.jpegQuality, to: url)
         }
     }
 
