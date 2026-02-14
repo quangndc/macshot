@@ -4,7 +4,7 @@
 import Foundation
 
 /// Export format options
-enum ExportFormat: String, CaseIterable {
+enum ExportFormat: String, CaseIterable, Codable {
     case png
     case jpeg
 

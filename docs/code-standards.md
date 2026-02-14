@@ -179,6 +179,88 @@ struct CaptureMetadata: Sendable {
 }
 ```
 
+### Settings Architecture Patterns
+
+#### @Observable for Reactive UI
+```swift
+// Use @Observable for settings models to enable reactive UI
+@Observable
+final class AppSettings: Equatable {
+    var captureFullscreenHotkey: Hotkey
+    var defaultFormat: ExportFormat
+    var launchAtLogin: Bool
+
+    // Equatable conformance for SwiftUI onChange tracking
+    static func == (lhs: AppSettings, rhs: AppSettings) -> Bool {
+        lhs.captureFullscreenHotkey == rhs.captureFullscreenHotkey &&
+        lhs.defaultFormat == rhs.defaultFormat
+        // ... other properties
+    }
+}
+```
+
+#### Property Wrapper Pattern
+```swift
+// Use @propertyWrapper for custom UserDefaults behavior
+@propertyWrapper
+struct AppStorageDefault<T: Codable> {
+    let key: String
+    let defaultValue: T
+
+    var wrappedValue: T {
+        get {
+            guard let data = UserDefaults.standard.data(forKey: key),
+                  let decoded = try? JSONDecoder().decode(T.self, from: data) else {
+                return defaultValue
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: key)
+            }
+        }
+    }
+}
+```
+
+#### Settings Store Pattern
+```swift
+@MainActor
+final class SettingsStore {
+    // Static properties with @AppStorageDefault for easy access
+    @AppStorageDefault(key: "hotkeys.fullscreen", defaultValue: Hotkey(...))
+    static var captureFullscreenHotkey: Hotkey
+
+    // Helper methods for complex data types
+    static func getOutputFolderURL() -> URL? {
+        guard let path = defaultOutputFolder else { return nil }
+        return URL(fileURLWithPath: path)
+    }
+}
+```
+
+#### Hotkey Recording Component
+```swift
+struct HotkeyRecorder: View {
+    @Binding var hotkey: Hotkey
+    @State private var isRecording = false
+
+    var body: some View {
+        HStack {
+            Text(title)
+            TextField("", text: .constant(hotkey.description))
+                .textFieldStyle(.roundedBorder)
+                .disabled(true)
+            Button(action: startRecording) {
+                Image(systemName: isRecording ? "record.circle.fill" : "record.circle")
+            }
+            .foregroundColor(isRecording ? .red : .primary)
+        }
+    }
+}
+```
+
 ### Error Handling
 
 #### Error Types
@@ -249,6 +331,21 @@ final class CaptureEngine: ObservableObject {
 }
 ```
 
+#### Settings Documentation
+```swift
+/// Centralized user preferences model with reactive UI updates
+///
+/// This @Observable class manages all application settings including:
+/// - Hotkeys for different capture modes
+/// - Export configuration (format, quality, location)
+/// - General app behavior (launch, notifications, UI visibility)
+/// - Editor defaults (tools, colors, stroke width)
+@Observable
+final class AppSettings: Equatable {
+    // Implementation
+}
+```
+
 #### Function Documentation
 ```swift
 /// Capture screenshot using the specified mode
@@ -271,6 +368,10 @@ func capture(mode: CaptureMode) async throws -> CaptureResult {
 
 /// Whether a capture operation is currently in progress
 @Published var isCapturing = false
+
+/// Default export quality (0.1 to 1.0), only applies to JPEG format
+@AppStorageDefault(key: "export.quality", defaultValue: 0.9)
+static var defaultQuality: Double
 ```
 
 ### Testing Standards
@@ -464,6 +565,65 @@ func clearCapture() {
 - [SwiftUI Documentation](https://developer.apple.com/documentation/swiftui)
 - [macOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines)
 
+### Migration and Version Control
+
+#### Settings Migration System
+```swift
+enum SettingsMigration {
+    static let currentVersion: Int = 1
+    private static let versionKey = "settings.version"
+
+    static func migrateIfNeeded() {
+        let storedVersion = UserDefaults.standard.integer(forKey: versionKey)
+        if storedVersion < currentVersion {
+            for version in storedVersion..<currentVersion {
+                migrate(from: version, to: version + 1)
+            }
+            UserDefaults.standard.set(currentVersion, forKey: versionKey)
+        }
+    }
+
+    private static func migrate(from: Int, to: Int) {
+        // Specific migration logic for version changes
+    }
+}
+```
+
+#### Version Migration Patterns
+- **Incremental**: Always migrate through each version sequentially
+- **Safe**: Default values ensure app works with partial settings
+- **Backward Compatible**: Migration doesn't lose existing data
+- **Automatic**: Runs on app launch without user intervention
+
+### Integration Standards
+
+#### Settings-to-System Integration
+```swift
+// Settings are automatically integrated with system components:
+// - HotkeyManager: SettingsStore.hotkeys.* for keyboard shortcuts
+// - LaunchController: SettingsStore.launchAtLogin for autostart
+// - ExportManager: SettingsStore.export.* for file output
+// - EditorViewModel: SettingsStore.editor.* for annotation defaults
+```
+
+#### UI-Data Binding Patterns
+```swift
+// SettingsView maintains a working copy synced to SettingsStore
+struct SettingsView: View {
+    @State private var settings = AppSettings.defaults
+
+    var body: some View {
+        TabView {
+            GeneralSettings(settings: $settings)
+        }
+        .onChange(of: settings) { _, _ in
+            syncToStore() // Automatic synchronization
+        }
+    }
+}
+```
+
 ---
 *Last Updated: 2026-02-14*
-*Version: 1.0.0*
+*Version: 1.1.0*
+*Phase 08: Settings Patterns Established*

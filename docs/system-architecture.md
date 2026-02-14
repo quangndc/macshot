@@ -69,6 +69,73 @@ final class CaptureEngine: ObservableObject {
 
 **Design Pattern**: Observer pattern for UI updates, Coordinator pattern for operation management
 
+#### AppSettings
+**Purpose**: Centralized user preferences model (Phase 08)
+**Responsibilities**:
+- Manage all user preferences in one @Observable model
+- Support hotkey configuration, export settings, behavior, and editor defaults
+- Enable reactive UI updates with SwiftUI
+
+**Key Features**:
+```swift
+@Observable
+final class AppSettings: Equatable {
+    // Hotkeys for capture operations
+    var captureFullscreenHotkey: Hotkey
+    var captureRegionHotkey: Hotkey
+    var captureWindowHotkey: Hotkey
+
+    // Export configuration
+    var defaultFormat: ExportFormat
+    var defaultQuality: Double
+    var defaultOutputFolder: URL?
+
+    // General app behavior
+    var launchAtLogin: Bool
+    var showMenuBarIcon: Bool
+    var showNotifications: Bool
+
+    // Editor defaults
+    var defaultTool: ToolType
+    var defaultStrokeWidth: Double
+    var defaultColor: Color
+}
+```
+
+**Design Pattern**: Observable pattern for reactive UI, Equatable conformance for change tracking
+
+#### SettingsStore
+**Purpose**: UserDefaults persistence wrapper (Phase 08)
+**Responsibilities**:
+- Provide thread-safe access to UserDefaults using @propertyWrapper
+- Encode/decode complex types for storage
+- Handle special data types (URLs, Colors) via helper methods
+- Support settings reset and validation
+
+**Key Features**:
+```swift
+@propertyWrapper
+struct AppStorageDefault<T: Codable> {
+    let key: String
+    let defaultValue: T
+    var wrappedValue: T { /* Get/Set to UserDefaults */ }
+}
+
+@MainActor
+final class SettingsStore {
+    static var captureFullscreenHotkey: Hotkey
+    static var defaultFormat: ExportFormat
+    static var launchAtLogin: Bool
+    // ... other settings with @AppStorageDefault
+
+    static func resetToDefaults()
+    static func getOutputFolderURL() -> URL?
+    static func getDefaultColor() -> Color
+}
+```
+
+**Design Pattern**: Property wrapper pattern, Factory pattern for defaults
+
 #### FileManager
 **Purpose**: Handle all file-related operations
 **Responsibilities**:
@@ -447,8 +514,38 @@ BaseView
 │   │   ├── CanvasContainer   // Image canvas with annotations
 │   │   └── PropertiesPanel  // Tool properties editor
 │   └── EditorViewModel       // State management
+├── SettingsView              // Settings window (Phase 08)
+│   ├── GeneralSettings      // App behavior settings
+│   ├── HotkeysSettings      // Keyboard shortcut configuration
+│   ├── ExportSettings       // File output preferences
+│   └── EditorSettings       // Annotation defaults
 └── RegionSelectionOverlay   // Planned: Region selection
 ```
+
+#### Settings UI Architecture (Phase 08)
+
+**SettingsView** - Main tabbed interface:
+```swift
+struct SettingsView: View {
+    @State private var settings = AppSettings.defaults
+
+    TabView {
+        GeneralSettings(settings: $settings)
+        HotkeysSettings(settings: $settings)
+        ExportSettings(settings: $settings)
+        EditorSettings(settings: $settings)
+    }
+    .onChange(of: settings) { _, _ in
+        syncToStore()
+    }
+}
+```
+
+**Individual Settings Components**:
+- **GeneralSettings**: Launch behavior, UI visibility, notifications
+- **HotkeysSettings**: Global hotkey recording and configuration
+- **ExportSettings**: Format, quality, output folder selection
+- **EditorSettings**: Default tools, colors, stroke widths
 
 #### Editor Layout Architecture
 The editor follows a clean, modular design:
@@ -510,7 +607,53 @@ struct ToolButton: View {
 - **Clipboard Operations**: Copy to clipboard
 - **Cloud Services**: Cloud backup integration
 
+## Settings System Architecture (Phase 08)
+
+### Settings Persistence
+- **Storage**: UserDefaults with JSON encoding
+- **Type Safety**: Custom @AppStorageDefault property wrapper
+- **Thread Safety**: @MainActor isolation
+- **Migration**: SettingsMigration for version upgrades
+- **Defaults**: Rational default values for all settings
+
+### Hotkey Recording System
+```swift
+struct HotkeyRecorder: View {
+    @Binding var hotkey: Hotkey
+    var body: some View {
+        Button(action: startRecording) {
+            Text(hotkey.description)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .keyboardShortcut(hotkey.keyCode, modifiers: .eventModifiers)
+    }
+}
+```
+
+### Version Migration Framework
+```swift
+enum SettingsMigration {
+    static let currentVersion: Int = 1
+
+    static func migrateIfNeeded() {
+        let storedVersion = UserDefaults.standard.integer(forKey: "settings.version")
+        if storedVersion < currentVersion {
+            // Run migrations in sequence
+            for version in storedVersion..<currentVersion {
+                migrate(from: version, to: version + 1)
+            }
+        }
+    }
+}
+```
+
+### Integration Points
+- **HotkeyManager**: Wired to SettingsStore for hotkey configuration
+- **LaunchController**: Uses `launchAtLogin` setting
+- **ExportManager**: Follows `defaultFormat` and `defaultQuality` settings
+- **EditorViewModel**: Applies `defaultTool` and `defaultColor` settings
+
 ---
 *Last Updated: 2026-02-14*
-*Architecture Version: 1.2.0*
-*Phase 05: Editor UI Complete*
+*Architecture Version: 1.3.0*
+*Phase 08: Settings Persistence Complete*

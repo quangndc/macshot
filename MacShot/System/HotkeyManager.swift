@@ -19,9 +19,23 @@ final class HotkeyManager: ObservableObject {
     private let captureHandler: () -> Void
 
     // INITIALIZER - Sets up the hotkey manager
+    // Note: Caller should call register() with desired hotkey
     init(captureHandler: @escaping () -> Void) {
         // Save the handler function so we can call it later
         self.captureHandler = captureHandler
+    }
+
+    // REGISTER FROM SETTINGS - Load from SettingsStore and register
+    /// Convenience method to register hotkey from stored preferences
+    /// Think of it like "use your saved preference"
+    func registerFromSettings() -> Bool {
+        let storedHotkey = Hotkey(
+            id: 1,
+            keyCode: SettingsStore.captureFullscreenHotkey.keyCode,
+            modifiers: SettingsStore.captureFullscreenHotkey.modifiers,
+            description: SettingsStore.captureFullscreenHotkey.description
+        )
+        return register(hotkey: storedHotkey)
     }
 
     // REGISTER - Tells macOS "hey, I want this keyboard shortcut"
@@ -118,7 +132,7 @@ final class HotkeyManager: ObservableObject {
 
 // HOTKEY - A simple data structure to describe a hotkey
 // Think of it like a recipe card: "press these buttons together"
-struct Hotkey: Codable {
+struct Hotkey: Codable, Equatable {
     // id: unique identifier for this hotkey
     var id: Int
 

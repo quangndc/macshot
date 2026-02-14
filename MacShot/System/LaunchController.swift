@@ -70,9 +70,24 @@ final class LaunchController: ObservableObject {
 
     // INITIALIZER - Sets up the launch controller
     init() {
-        // Check the current status on startup
-        // Think of it like checking if the timer is already set when you plug in the coffee maker
+        // Check the actual macOS login items status
+        // Think of it like "see what macOS thinks is set"
         checkStatus()
+    }
+
+    // LOAD FROM SETTINGS - Sync with SettingsStore
+    /// Call this to load saved preference and sync with macOS
+    /// Think of it like "check what we saved, make it match reality"
+    func loadFromSettings() {
+        // Use the saved preference
+        launchAtLogin = SettingsStore.launchAtLogin
+
+        // Make sure macOS matches what we want
+        if launchAtLogin {
+            toggle(enabled: true)
+        } else {
+            toggle(enabled: false)
+        }
     }
 }
 

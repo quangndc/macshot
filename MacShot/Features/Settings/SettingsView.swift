@@ -1,84 +1,69 @@
-// SettingsView.swift
-// This file is the settings window UI
-// Think of it like the control panel on your toaster - adjust how things work
+// SettingsView.swift - Main settings window with tabbed interface
+// Think of it like a filing cabinet with different drawers for different settings
+// Each tab is like a drawer labeled with its category
 
-import SwiftUI  // Apple's modern UI framework
+import SwiftUI
 
 // SETTINGS VIEW - The main settings window
 struct SettingsView: View {
-
-    // State for hotkey customization
-    // Think of it like remembering which button you want on the remote
-    @State private var hotkeyDescription: String = Hotkey.default.description
-
-    // State for launch at login toggle
-    // @State means this view owns this data
-    // Think of it like a sticky note on the control panel
-    @State private var launchAtLogin = false
-
-    // State for notification toggle
-    @State private var notificationsEnabled = true
+    // State holds the current settings values
+    // Think of it like a working copy of your settings
+    @State private var settings = AppSettings.defaults
 
     // BODY - What the settings window looks like
     var body: some View {
-        // Form is a specialized layout for settings
-        // It arranges controls in a clean, organized way
-        // Think of it like a neat checklist on your fridge
-        Form {
-            // SECTION - Groups related settings together
-            // This creates a visual grouping with a header
-            Section("General") {
-                // TOGGLE SWITCH - A checkbox-like control
-                // launchAtLogin is the data binding ($)
-                // The $ means "connect this control to this variable"
-                Toggle("Launch at Login", isOn: $launchAtLogin)
-
-                // TOGGLE SWITCH for notifications
-                Toggle("Show Notifications", isOn: $notificationsEnabled)
-            }
-
-            // Another section for hotkey settings
-            Section("Hotkey") {
-                // This shows the current hotkey (read-only for now)
-                HStack {
-                    Text("Global Hotkey")
-                    Spacer()  // Pushes text to left, icon to right
-                    Text(hotkeyDescription)
-                        .foregroundStyle(.secondary)  // Gray color
+        // TAB VIEW - Creates tabbed interface like System Settings
+        // Each tab is a different category of settings
+        TabView {
+            // General tab - basic app behavior
+            GeneralSettings(settings: $settings)
+                .tabItem {
+                    Label("General", systemImage: "gearshape")
                 }
 
-                // TODO: Add hotkey recorder UI in future phase
-                // This would let users press keys to set custom hotkey
-                Text("Hotkey customization coming soon")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            // Section for export settings
-            Section("Export") {
-                // Default format picker
-                Picker("Default Format", selection: $defaultFormat) {
-                    Text("PNG").tag(ImageFormat.png)
-                    Text("JPEG").tag(ImageFormat.jpeg)
-                    Text("HEIC").tag(ImageFormat.heic)
+            // Hotkeys tab - keyboard shortcuts
+            HotkeysSettings(settings: $settings)
+                .tabItem {
+                    Label("Hotkeys", systemImage: "command")
                 }
-            }
+
+            // Export tab - file output settings
+            ExportSettings(settings: $settings)
+                .tabItem {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+
+            // Editor tab - annotation defaults
+            EditorSettings(settings: $settings)
+                .tabItem {
+                    Label("Editor", systemImage: "pencil")
+                }
         }
-        // FORM MODIFIERS - Customize the form appearance
-        .formStyle(.grouped)  // Grouped style (macOS settings look)
-        .navigationTitle("Settings")  // Window title
-        .frame(width: 500, height: 300)  // Window size
+        // Window size - big enough for content, small enough to be tidy
+        .frame(width: 500, height: 400)
+        .onAppear {
+            syncToStore()
+        }
+        .onChange(of: settings) { _, _ in
+            syncToStore()
+        }
     }
 
-    // STATE - Default format for exports
-    @State private var defaultFormat = ImageFormat.png
-}
-
-// IMAGE FORMAT - Enum for supported export formats
-enum ImageFormat: String {
-    case png = "PNG"
-    case jpeg = "JPEG"
-    case heic = "HEIC"
+    // SYNC TO STORE - Save current settings to SettingsStore
+    private func syncToStore() {
+        SettingsStore.captureFullscreenHotkey = settings.captureFullscreenHotkey
+        SettingsStore.captureRegionHotkey = settings.captureRegionHotkey
+        SettingsStore.captureWindowHotkey = settings.captureWindowHotkey
+        SettingsStore.defaultFormat = settings.defaultFormat
+        SettingsStore.defaultQuality = settings.defaultQuality
+        SettingsStore.setOutputFolderURL(settings.defaultOutputFolder)
+        SettingsStore.launchAtLogin = settings.launchAtLogin
+        SettingsStore.showMenuBarIcon = settings.showMenuBarIcon
+        SettingsStore.showNotifications = settings.showNotifications
+        SettingsStore.setDefaultTool(settings.defaultTool)
+        SettingsStore.defaultStrokeWidth = settings.defaultStrokeWidth
+        SettingsStore.setDefaultColor(settings.defaultColor)
+    }
 }
 
 // PREVIEW - Shows what this view looks like in Xcode

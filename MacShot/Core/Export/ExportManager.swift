@@ -134,4 +134,34 @@ final class ExportManager: ObservableObject {
             return nil
         }
     }
+
+    // MARK: - Defaults from Settings
+
+    /// Create default ExportOptions from SettingsStore
+    /// Think of it like "get user's saved export preferences"
+    static func defaultOptions() -> ExportOptions {
+        var options = ExportOptions()
+
+        // Load format from settings
+        options.format = SettingsStore.defaultFormat
+
+        // Load quality from settings
+        options.jpegQuality = SettingsStore.defaultQuality
+
+        // Load output folder from settings
+        options.outputPath = SettingsStore.getOutputFolderURL()
+
+        // Copy to clipboard by default (can be made configurable later)
+        options.copyToClipboard = true
+
+        return options
+    }
+
+    /// Create ExportOptions with specific format, using settings for other values
+    /// Think of it like "use this format, but keep other preferences from settings"
+    static func optionsWithFormat(_ format: ExportFormat) -> ExportOptions {
+        var options = defaultOptions()
+        options.format = format
+        return options
+    }
 }

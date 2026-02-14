@@ -55,7 +55,15 @@ To create the most efficient and user-friendly screenshot tool for macOS, levera
 - Must provide settings for configuration
 - Must use SwiftUI for modern interface
 
-#### FR-05: Integration Features
+#### FR-05: Settings System (Phase 08)
+- Must provide centralized user preferences management
+- Must support hotkey configuration with real-time recording
+- Must persist all settings using UserDefaults
+- Must provide tabbed settings interface
+- Must support settings version migration
+- Must integrate with HotkeyManager, LaunchController, ExportManager
+
+#### FR-06: Integration Features
 - Must respect macOS Screen Recording permission
 - Must handle Accessibility permission for hotkeys
 - Must integrate with macOS system services
@@ -103,12 +111,28 @@ MacShot/
 │       ├── WindowCapture.swift
 │       └── ScreenCaptureHelper.swift
 ├── Features/                # Feature modules
-│   └── Capture/
-│       └── RegionSelectionOverlay.swift
+│   ├── Capture/
+│   │   └── RegionSelectionOverlay.swift
+│   ├── Editor/              # Annotation editor
+│   │   ├── EditorView.swift
+│   │   ├── EditorToolbar.swift
+│   │   ├── EditorWindow.swift
+│   │   └── EditorViewModel.swift
+│   └── Settings/            # Settings UI (Phase 08)
+│       ├── SettingsView.swift
+│       ├── GeneralSettings.swift
+│       ├── HotkeysSettings.swift
+│       ├── ExportSettings.swift
+│       └── EditorSettings.swift
 ├── UI/                      # SwiftUI interfaces
 │   └── MenuBarView.swift    # Menu bar interface
 ├── System/                  # System integration
-│   └── HotkeyManager.swift  # Global hotkey handling
+│   ├── HotkeyManager.swift  # Global hotkey handling
+│   └── Settings/            # Settings persistence (Phase 08)
+│       ├── AppSettings.swift
+│       ├── SettingsStore.swift
+│       └── Migrations/
+│           └── SettingsMigration.swift
 └── Resources/               # Assets and resources
 ```
 
@@ -117,6 +141,9 @@ MacShot/
 - **CoreGraphics**: Low-level graphics operations
 - **Carbon**: Global hotkey handling
 - **SwiftConcurrency**: Async/await support
+- **SwiftUI**: Reactive UI framework
+- **Foundation**: Core framework services
+- **UserDefaults**: Settings persistence
 
 ### Platform Requirements
 - **macOS 15.0+**
@@ -147,15 +174,23 @@ MacShot/
 - ⏳ Global hotkey registration
 - ⏳ Hotkey configuration
 - ⏳ Event handling
-- ⏳ User interface
+- ✅ User interface (Phase 08)
 
-### Phase 5: User Interface (Planned)
-- ⏳ Menu bar implementation
-- ⏳ Settings interface
+### Phase 5: User Interface (Completed)
+- ✅ Menu bar implementation (placeholder)
+- ✅ Settings interface (Phase 08)
 - ⏳ Status indicators
 - ⏳ Theme support
 
-### Phase 6: Advanced Features (Planned)
+### Phase 8: Settings System (Completed)
+- ✅ AppSettings @Observable model
+- ✅ SettingsStore @propertyWrapper
+- ✅ Tabbed settings interface (4 tabs)
+- ✅ Individual settings views
+- ✅ HotkeyRecorder component
+- ✅ SettingsMigration system
+
+### Phase 9: Advanced Features (Planned)
 - ⏳ Image annotations
 - ⏳ Export options
 - ⏳ Cloud sync
@@ -242,6 +277,15 @@ MacShot/
 - Configuration files: Config/
 - Documentation: docs/
 
+### Technical Patterns Established (Phase 08)
+- **@Observable**: Reactive SwiftUI state management for settings
+- **@propertyWrapper**: Type-safe UserDefaults access with AppStorageDefault
+- **MainActor**: Thread-safe UI updates and settings access
+- **Codable**: Settings serialization for persistence
+- **Equatable**: Settings change tracking for reactive updates
+- **Version Migration**: Settings upgrade system for backward compatibility
+
 ---
 *Last Updated: 2026-02-14*
-*Version: 1.0.0*
+*Version: 1.1.0*
+*Phase 8: Settings System Complete*

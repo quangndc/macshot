@@ -14,11 +14,50 @@ MacShot/
 │   ├── CaptureEngine.swift  # Main coordinator (stub)
 │   ├── FileManager.swift    # File operations (stub)
 │   └── CaptureEngine/       # Detailed capture implementations
-├── Features/                # Feature-specific modules
-│   └── Capture/
-├── UI/                      # SwiftUI interfaces
-├── System/                  # System integration components
-└── Resources/               # Assets and resources
+│       ├── CaptureEngineCoordinator.swift  # Main capture engine
+│       ├── CaptureMode.swift      # Defines screenshot capture modes
+│       ├── CaptureResult.swift    # Result wrapper with metadata
+│       ├── FullscreenCapture.swift
+│       ├── RegionCapture.swift
+│       ├── WindowCapture.swift
+│       └── ScreenCaptureHelper.swift
+├── Core/Annotation/         # Annotation system (Phase 05 complete)
+│   ├── Models/             # Shape models and protocols
+│   ├── Tools/             # Tool management and types
+│   ├── AnnotationCanvas.swift
+│   ├── AnnotationEngine.swift
+│   └── InteractionHandler.swift
+├── Core/Export/           # Export functionality
+│   ├── Formats/           # PNG/JPEG exporters
+│   ├── ExportManager.swift
+│   ├── ExportOptions.swift
+│   ├── ImageCropper.swift
+│   └── AspectRatio.swift
+├── Features/              # Feature-specific modules
+│   ├── Capture/
+│   │   └── RegionSelectionOverlay.swift
+│   ├── Editor/            # Full-featured editor UI (Phase 05)
+│   │   ├── Components/    # Editor UI components
+│   │   ├── EditorView.swift
+│   │   ├── EditorToolbar.swift
+│   │   ├── EditorWindow.swift
+│   │   └── EditorViewModel.swift
+│   └── Settings/          # Settings UI (Phase 08 - Complete)
+│       ├── SettingsView.swift
+│       ├── GeneralSettings.swift
+│       ├── HotkeysSettings.swift
+│       ├── ExportSettings.swift
+│       └── EditorSettings.swift
+├── System/                # System integration components
+│   ├── HotkeyManager.swift  # Global hotkey management (placeholder)
+│   └── Settings/            # Settings persistence (Phase 08)
+│       ├── AppSettings.swift
+│       ├── SettingsStore.swift
+│       └── Migrations/
+│           └── SettingsMigration.swift
+├── UI/                    # SwiftUI interfaces
+│   └── MenuBarView.swift    # Main application menu (placeholder)
+└── Resources/             # Assets and resources
 ```
 
 ## Module Documentation
@@ -26,7 +65,7 @@ MacShot/
 ### Core Module (`Core/`)
 
 #### Core/CaptureEngine.swift
-**Status**: Documentation stub
+**Status**: Implementation placeholder
 **Purpose**: Placeholder for main capture engine documentation
 **Key Components**:
 - Referenced submodules in CaptureEngine/ directory
@@ -96,44 +135,123 @@ struct CaptureResult: Sendable {
 ```
 **Features**: Sendable protocol for thread safety
 
-##### FullscreenCapture.swift
-**Status**: Not implemented
-**Purpose**: Fullscreen screenshot capture
-**Planned Implementation**: CGDisplayCreateImage API usage
+### Annotation Module (`Core/Annotation/`)
 
-##### RegionCapture.swift
-**Status**: Not implemented
-**Purpose**: Region selection and capture
-**Planned Implementation**: Interactive overlay + CGWindowListCreateImage
+#### Annotation Canvas and Engine
+**Status**: Implemented (Phase 05)
+**Purpose**: Full-featured annotation system for screenshots
+**Key Components**:
+- Shape models: Arrow, Ellipse, Line, Rectangle, Text, Spotlight
+- Tool management: ToolType enum, ToolFactory
+- Canvas rendering: AnnotationCanvas with real-time updates
+- Interaction handling: Mouse/touch event processing
 
-##### WindowCapture.swift
-**Status**: Not implemented
-**Purpose**: Window-specific capture
-**Planned Implementation**: Window detection + CGWindowListCreateImage
+### Export Module (`Core/Export/`)
 
-##### ScreenCaptureHelper.swift
-**Status**: Not implemented
-**Purpose**: Common screen capture utilities
-**Planned Implementation**: Shared capture logic
+#### Export System
+**Status**: Implemented
+**Purpose**: Multiple format export functionality
+**Key Components**:
+- PNG/JPEG exporters with quality settings
+- Export manager with format selection
+- Image cropping and aspect ratio handling
+- Export options configuration
 
-### Features Module (`Features/`)
+### Settings Module (`System/Settings/`)
 
-#### Features/Capture/RegionSelectionOverlay.swift
-**Status**: Not implemented
-**Purpose**: Interactive region selection UI
-**Planned Implementation**: SwiftUI overlay for region selection
+#### System/Settings/AppSettings.swift
+**Status**: Implemented (Phase 08)
+**Purpose**: Centralized user preferences model
+**Key Components**:
+```swift
+@Observable
+final class AppSettings: Equatable {
+    var captureFullscreenHotkey: Hotkey
+    var captureRegionHotkey: Hotkey
+    var captureWindowHotkey: Hotkey
+    var defaultFormat: ExportFormat
+    var defaultQuality: Double
+    var defaultOutputFolder: URL?
+    var launchAtLogin: Bool
+    var showMenuBarIcon: Bool
+    var showNotifications: Bool
+    var defaultTool: ToolType
+    var defaultStrokeWidth: Double
+    var defaultColor: Color
+}
+```
+**Features**: Equatable conformance for SwiftUI change tracking, reactive UI updates
 
-### UI Module (`UI/`)
+#### System/SettingsStore.swift
+**Status**: Implemented (Phase 08)
+**Purpose**: UserDefaults persistence with custom property wrapper
+**Key Components**:
+```swift
+@propertyWrapper
+struct AppStorageDefault<T: Codable> {
+    let key: String
+    let defaultValue: T
+    var wrappedValue: T { /* Get/Set to UserDefaults */ }
+}
 
-#### UI/MenuBarView.swift
-**Status**: Placeholder - actual editor UI implemented in Features/Editor
-**Purpose**: Menu bar interface component
-**Current Implementation**: Simple placeholder
+@MainActor
+final class SettingsStore {
+    @AppStorageDefault(key: "hotkeys.fullscreen", defaultValue: Hotkey(...))
+    static var captureFullscreenHotkey: Hotkey
+
+    // Helper methods for complex types (URL, Color)
+    static func getOutputFolderURL() -> URL?
+    static func getDefaultColor() -> Color
+    static func resetToDefaults()
+}
+```
+**Features**: Type-safe storage, thread-safe access, default value fallback
+
+#### System/Settings/Migrations/SettingsMigration.swift
+**Status**: Implemented (Phase 08)
+**Purpose**: Version migration system for settings upgrades
+**Key Components**:
+```swift
+enum SettingsMigration {
+    static let currentVersion: Int = 1
+    static func migrateIfNeeded()
+    static func migrate(from: Int, to: Int)
+    static func resetToDefaults()
+    static func validate() -> Bool
+}
+```
+**Features**: Incremental migrations, backward compatibility, automatic upgrade
+
+### Settings UI Module (`Features/Settings/`)
+
+#### Features/Settings/SettingsView.swift
+**Status**: Implemented (Phase 08)
+**Purpose**: Main settings window with tabbed interface
+**Key Components**:
+```swift
+struct SettingsView: View {
+    @State private var settings = AppSettings.defaults
+
+    TabView {
+        GeneralSettings(settings: $settings)
+        HotkeysSettings(settings: $settings)
+        ExportSettings(settings: $settings)
+        EditorSettings(settings: $settings)
+    }
+}
+```
+**Features**: Tabbed interface, real-time synchronization to SettingsStore
+
+#### Individual Settings Views
+- **GeneralSettings**: App behavior (launch, notifications, UI visibility)
+- **HotkeysSettings**: Global hotkey configuration with HotkeyRecorder
+- **ExportSettings**: File output configuration (format, quality, location)
+- **EditorSettings**: Annotation defaults (tools, colors, stroke width)
 
 ### Editor UI Module (`Features/Editor/`)
 
 #### Features/Editor/EditorView.swift
-**Status**: Implemented
+**Status**: Implemented (Phase 05)
 **Purpose**: Main editor interface with canvas and properties panel
 **Key Components**:
 ```swift
@@ -141,7 +259,6 @@ struct EditorView: View {
     let result: CaptureResult
     @State private var viewModel: EditorViewModel
 
-    // Layout: Toolbar + Canvas Container + Properties Panel
     var body: some View {
         VStack(spacing: 0) {
             EditorToolbar(viewModel: viewModel, onToggleFullscreen: {})
@@ -153,35 +270,6 @@ struct EditorView: View {
     }
 }
 ```
-
-#### Features/Editor/EditorToolbar.swift
-**Status**: Implemented
-**Purpose**: Toolbar with tool selection and quick actions
-**Features**:
-- Tool buttons for all annotation tools
-- Color preset selection
-- Toggle controls for properties panel and toolbar
-- Export button
-- Fullscreen toggle
-
-#### Features/Editor/EditorWindow.swift
-**Status**: Implemented
-**Purpose**: Native window wrapper for editor interface
-**Features**:
-- Auto-resizing based on image dimensions
-- Minimum window size enforcement
-- Fullscreen toggle capability
-- Timestamp-based window title
-
-#### Features/Editor/EditorViewModel.swift
-**Status**: Implemented
-**Purpose**: State management for editor UI
-**Key Features**:
-- Tool selection and management
-- Style properties (color, fill, stroke width, opacity)
-- Panel visibility toggles
-- Color preset application
-- Tool manager integration
 
 ### System Module (`System/`)
 
@@ -208,7 +296,7 @@ let package = Package(
             name: "MacShot",
             dependencies: [],
             path: "MacShot",
-            sources: [/* 16 source files */]
+            sources: [/* 20+ source files */]
         ),
         .testTarget(
             name: "MacShotTests",
@@ -222,7 +310,7 @@ let package = Package(
 **Key Configuration Points**:
 - macOS 15.0+ minimum requirement
 - Swift 6.0 tools version
-- 16 source files organized by module
+- 20+ source files organized by module (Phase 08 added Settings module)
 - Test target included
 
 ### State Management
@@ -231,7 +319,38 @@ The app uses:
 - **@Published properties** for UI state
 - **@MainActor** for UI updates
 - **ObservableObject** for reactive patterns
+- **@Observable** for SwiftUI reactive data sources (Phase 08)
 - **async/await** for non-blocking operations
+
+### Settings System (Phase 08 Implementation)
+
+**Architecture Pattern**: Reactive settings with real-time UI updates
+```swift
+// Model layer
+@Observable
+final class AppSettings: Equatable {
+    // All user preferences in one place
+}
+
+// Persistence layer
+@propertyWrapper
+struct AppStorageDefault<T: Codable> {
+    // Type-safe UserDefaults access
+}
+
+// UI layer
+struct SettingsView: View {
+    @State private var settings = AppSettings.defaults
+    // Real-time synchronization to SettingsStore
+}
+```
+
+**Key Features**:
+- **Type Safety**: Custom property wrapper with Codable conformance
+- **Reactive UI**: @Observable enables automatic UI updates
+- **Version Migration**: SettingsMigration for upgrades
+- **Integration**: Wired to HotkeyManager, LaunchController, ExportManager
+- **User Experience**: Tabbed interface with live preview
 
 ### Error Handling
 
@@ -240,6 +359,12 @@ Planned error handling strategies:
 - Try-catch blocks for async operations
 - User-friendly error messages
 - Graceful failure recovery
+
+**Settings-Specific Error Handling**:
+- Invalid hotkey combinations
+- Settings migration failures
+- Permission issues for autostart
+- Export configuration validation
 
 ## Project Status
 
@@ -258,6 +383,11 @@ Planned error handling strategies:
 | UI/MenuBar | 0% | Placeholder | 0% |
 | Features/Editor | 100% | Complete | 100% |
 | System/Hotkey | 0% | Placeholder | 0% |
+| **System/Settings** | **100%** | **Complete (Phase 08)** | **100%** |
+| Features/Settings UI | 100% | Complete (4 tabs) | 100% |
+| Settings Migration | 100% | v1 migration system | 100% |
+| Core/Annotation | 100% | Complete | 100% |
+| Core/Export | 100% | Complete | 100% |
 
 ### Test Suite
 
@@ -326,9 +456,38 @@ Planned error handling strategies:
 | File Manager | `MacShot/Core/FileManager.swift` | Planned |
 | UI Components | `MacShot/UI/` | Planned |
 | Hotkey System | `MacShot/System/HotkeyManager.swift` | Planned |
+| **Settings System** | **`MacShot/System/Settings/`** | **Implemented (Phase 08)** |
+| **Settings UI** | **`MacShot/Features/Settings/`** | **Implemented (Phase 08)** |
+| Annotation System | `MacShot/Core/Annotation/` | Complete |
+| Export System | `MacShot/Core/Export/` | Complete |
 | Tests | `MacShotTests/` | Basic setup |
+
+### New Files Added (Phase 08)
+
+**Settings Architecture**:
+- `System/Settings/AppSettings.swift` - Central @Observable settings model
+- `System/SettingsStore.swift` - UserDefaults persistence wrapper
+- `System/Settings/Migrations/SettingsMigration.swift` - Version migration system
+
+**Settings UI Components**:
+- `Features/Settings/SettingsView.swift` - Tabbed settings interface
+- `Features/Settings/GeneralSettings.swift` - App behavior settings
+- `Features/Settings/HotkeysSettings.swift` - Keyboard shortcuts
+- `Features/Settings/ExportSettings.swift` - File export preferences
+- `Features/Settings/EditorSettings.swift` - Annotation defaults
+
+**Supporting Components**:
+- `Features/Settings/HotkeyRecorder.swift` - Interactive hotkey recording
+
+### Technical Patterns Established (Phase 08)
+- **@Observable**: Reactive SwiftUI state management for settings
+- **@propertyWrapper**: Type-safe UserDefaults access with AppStorageDefault
+- **MainActor**: Thread-safe UI updates and settings access
+- **Codable**: Settings serialization for persistence
+- **Equatable**: Settings change tracking for reactive updates
+- **Version Migration**: Settings upgrade system for backward compatibility
 
 ---
 *Generated: 2026-02-14*
 *Codebase Analysis: Based on actual source files and project structure*
-*Updated: Editor UI module completed in Phase 05*
+*Updated: Settings module completed in Phase 08 (7 new files)*

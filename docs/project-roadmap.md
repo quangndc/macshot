@@ -114,11 +114,11 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 **Planned Tasks**:
 - [ ] Global hotkey registration (Carbon API)
-- [ ] Hotkey configuration UI
+- [x] Hotkey configuration UI (Phase 08)
 - [ ] Event handling and routing
 - [ ] Hotkey conflict detection
-- [ ] Default hotkey settings
-- [ ] Hotkey persistence
+- [x] Default hotkey settings (Phase 08)
+- [x] Hotkey persistence (Phase 08)
 
 **Technical Requirements**:
 - Carbon API integration
@@ -153,7 +153,7 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 - [x] Export functionality
 - [x] Fullscreen support
 - [ ] Menu bar implementation (placeholder)
-- [ ] Settings interface
+- [x] Settings interface (Phase 08)
 - [ ] Theme customization
 - [ ] Accessibility features
 
@@ -242,7 +242,79 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 8: Documentation & Distribution 📅 PLANNED
+### Phase 8: Settings Persistence ✅ COMPLETED
+*Status: Completed - 2026-02-14*
+
+**Duration**: 1 day (actual)
+**Priority**: High
+
+**Completed Tasks**:
+- [x] AppSettings @Observable model with all preferences
+- [x] SettingsStore @propertyWrapper for UserDefaults persistence
+- [x] Tabbed settings interface (4 tabs)
+- [x] Individual settings views (General, Hotkeys, Export, Editor)
+- [x] HotkeyRecorder component for interactive recording
+- [x] SettingsMigration system for version upgrades
+- [x] Integration with HotkeyManager, LaunchController, ExportManager
+
+**Technical Requirements**:
+- @Observable reactive pattern for real-time UI updates
+- Type-safe @propertyWrapper for UserDefaults access
+- Codable conformance for settings serialization
+- Version migration for settings upgrades
+- MainActor isolation for thread safety
+
+**Success Metrics**:
+- Complete settings persistence system
+- User-friendly settings interface
+- Automatic settings synchronization
+- Backward compatibility with migrations
+- Integration with existing components
+
+**Dependencies**:
+- Phase 5: User Interface (Editor UI module)
+- Phase 4: Hotkey System (hotkey configuration)
+- SwiftUI reactive patterns
+- UserDefaults persistence
+
+---
+
+### Phase 9: Advanced Features 📅 PLANNED
+*Estimated Start: Week 6-8*
+
+**Duration**: 2-3 weeks
+**Priority**: Medium
+
+**Planned Tasks**:
+- [ ] Image annotations (basic markup)
+- [ ] Export options and formats
+- [ ] Cloud integration (optional)
+- [ ] Capture history viewer
+- [ ] Batch operations
+- [ ] Plugin architecture
+
+**Technical Requirements**:
+- Canvas drawing capabilities
+- Export pipeline
+- Cloud storage SDK
+- Database for history
+- Plugin loading system
+
+**Success Metrics**:
+- Basic annotation tools functional
+- Multiple export formats
+- Optional cloud sync
+- History management system
+
+**Dependencies**:
+- Phase 3: File Management
+- Phase 5: User Interface
+- Phase 8: Settings Persistence
+- Additional frameworks as needed
+
+---
+
+### Phase 10: Documentation & Distribution 📅 PLANNED
 *Estimated Start: Week 13-14*
 
 **Duration**: 2 weeks
@@ -293,11 +365,13 @@ gantt
     Hotkey System       :pending, des7, 2026-03-27, 14d
     section Phase 5
     User Interface      :done,    des8, 2026-02-14, 1d
-    section Phase 6
-    Advanced Features   :pending, des9, 2026-05-01, 28d
+    section Phase 8
+    Settings System     :done,    des8b, 2026-02-14, 1d
+    section Phase 9
+    Advanced Features   :pending, des9, 2026-04-15, 21d
     section Phase 7
     Testing & QA        :pending, des10, 2026-05-29, 28d
-    section Phase 8
+    section Phase 10
     Documentation & Release :   des11, 2026-06-26, 14d
 ```
 
@@ -338,24 +412,28 @@ gantt
 - Basic file management
 - Global hotkeys
 - Essential settings
+- **Settings persistence system (Phase 08)**
 
 ### Version 1.1 (Q3 2026)
 - Image annotations
 - Export improvements
 - Performance enhancements
 - Bug fixes
+- Advanced settings features
 
 ### Version 1.2 (Q4 2026)
 - Advanced features
 - Cloud integration
 - Plugin system
 - Additional capture modes
+- History management
 
 ### Version 2.0 (Q1 2027)
 - Major feature updates
 - UI redesign
 - Advanced editing
 - Integration with other tools
+- Theme system
 
 ## Risk Assessment
 
