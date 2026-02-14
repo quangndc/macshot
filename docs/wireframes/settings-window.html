@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacShot - Settings Window Wireframe</title>
+    <style>
+        /* ========================================
+           MacShot Design System - Settings Window
+           macOS 15 Sequoia Style
+           ======================================== */
+
+        :root {
+            /* Colors - Light Mode */
+            --bg-primary: #F5F5F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #EDEDED;
+            --text-primary: #000000;
+            --text-secondary: #3C3C42;
+            --text-tertiary: #828287;
+            --accent: #007AFF;
+            --accent-hover: #1F8FFF;
+            --border: rgba(0, 0, 0, 0.15);
+            --separator: rgba(0, 0, 0, 0.1);
+            --shadow-subtle: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+
+            /* Spacing - 8pt Grid */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-7: 32px;
+            --space-8: 40px;
+
+            /* Border Radius */
+            --radius-small: 6px;
+            --radius-medium: 10px;
+            --radius-large: 12px;
+
+            /* Window */
+            --window-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1E1E1E;
+                --bg-secondary: #2C2C2E;
+                --bg-tertiary: #3A3A3C;
+                --text-primary: #FFFFFF;
+                --text-secondary: #EBEBF5;
+                --text-tertiary: #98989D;
+                --accent: #0A84FF;
+                --accent-hover: #409CFF;
+                --border: rgba(255, 255, 255, 0.15);
+                --separator: rgba(255, 255, 255, 0.1);
+                --shadow-subtle: rgba(0, 0, 0, 0.3);
+                --shadow-medium: rgba(0, 0, 0, 0.5);
+                --window-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8);
+        }
+
+        /* ========================================
+           Settings Window
+           ======================================== */
+        .settings-window {
+            width: 100%;
+            max-width: 680px;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-large);
+            box-shadow: var(--window-shadow);
+            overflow: hidden;
+            animation: windowIn 0.3s ease-out;
+        }
+
+        @keyframes windowIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* Window Title Bar */
+        .title-bar {
+            height: 52px;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--separator);
+            display: flex;
+            align-items: center;
+            padding: 0 var(--space-5);
+            position: relative;
+        }
+
+        /* Traffic light buttons (macOS window controls) */
+        .traffic-lights {
+            display: flex;
+            gap: var(--space-2);
+            position: absolute;
+            left: var(--space-4);
+        }
+
+        .traffic-light {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: opacity 0.15s ease;
+        }
+
+        .traffic-light:hover {
+            opacity: 0.8;
+        }
+
+        .traffic-light.close {
+            background: #FF5F57;
+        }
+
+        .traffic-light.minimize {
+            background: #FEBC2E;
+        }
+
+        .traffic-light.maximize {
+            background: #28C840;
+        }
+
+        .window-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            flex: 1;
+            text-align: center;
+            letter-spacing: -0.1px;
+        }
+
+        /* ========================================
+           Tab Navigation
+           ======================================== */
+        .tab-bar {
+            display: flex;
+            background: var(--bg-primary);
+            border-bottom: 1px solid var(--separator);
+            padding: 0 var(--space-4);
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: var(--space-3) var(--space-4);
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid transparent;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+            white-space: nowrap;
+            position: relative;
+        }
+
+        .tab-button:hover {
+            color: var(--text-primary);
+        }
+
+        .tab-button.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-button:focus {
+            outline: none;
+            box-shadow: inset 0 -2px 0 0 var(--accent);
+        }
+
+        /* ========================================
+           Settings Content
+           ======================================== */
+        .settings-content {
+            display: flex;
+            min-height: 400px;
+        }
+
+        .settings-panel {
+            display: none;
+            flex: 1;
+            padding: var(--space-6);
+            overflow-y: auto;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .settings-panel.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: var(--space-4);
+            letter-spacing: -0.3px;
+        }
+
+        /* Settings Groups */
+        .settings-group {
+            margin-bottom: var(--space-6);
+        }
+
+        .settings-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .group-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--space-3);
+        }
+
+        .group-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--space-3) 0;
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .group-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-label {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-1);
+        }
+
+        .item-title {
+            font-size: 13px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+
+        .item-description {
+            font-size: 11px;
+            color: var(--text-tertiary);
+        }
+
+        /* ========================================
+           Form Controls
+           ======================================== */
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            width: 42px;
+            height: 24px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch.checked {
+            background: var(--accent);
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.checked::after {
+            transform: translateX(18px);
+        }
+
+        /* PopUp Button / Select */
+        .popup-button {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text-primary);
+            min-width: 140px;
+            transition: all 0.15s ease;
+        }
+
+        .popup-button:hover {
+            border-color: var(--accent);
+        }
+
+        .popup-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+        }
+
+        .popup-button svg {
+            width: 10px;
+            height: 10px;
+            fill: var(--text-tertiary);
+            margin-left: auto;
+        }
+
+        /* Text Field */
+        .text-field {
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-small);
+            font-size: 13px;
+            color: var(--text-primary);
+            min-width: 200px;
+            transition: border-color 0.15s ease;
+        }
+
+        .text-field:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Stepper */
+        .stepper {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .stepper-value {
+            font-size: 13px;
+            color: var(--text-primary);
+            min-width: 40px;
+            text-align: center;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .stepper-button {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.15s ease;
+        }
+
+        .stepper-button:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .stepper-button:active {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        /* Shortcut Input */
+        .shortcut-input {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-2);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            font-size: 12px;
+            font-family: 'SF Mono', Monaco, monospace;
+            color: var(--text-secondary);
+            transition: all 0.15s ease;
+            min-width: 100px;
+            justify-content: center;
+        }
+
+        .shortcut-input:hover {
+            border-color: var(--accent);
+        }
+
+        .shortcut-input.recording {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .shortcut-key {
+            padding: 2px var(--space-2);
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* ========================================
+           Window Footer
+           ======================================== */
+        .window-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--space-2);
+            padding: var(--space-4);
+            background: var(--bg-primary);
+            border-top: 1px solid var(--separator);
+        }
+
+        .footer-button {
+            padding: var(--space-2) var(--space-4);
+            font-size: 13px;
+            font-weight: 500;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            border: none;
+            min-height: 28px;
+        }
+
+        .footer-button.cancel {
+            background: transparent;
+            color: var(--text-primary);
+        }
+
+        .footer-button.cancel:hover {
+            background: var(--bg-tertiary);
+        }
+
+        .footer-button.apply {
+            background: var(--accent);
+            color: white;
+        }
+
+        .footer-button.apply:hover {
+            background: var(--accent-hover);
+        }
+
+        /* ========================================
+           Responsive Design
+           ======================================== */
+        @media (max-width: 700px) {
+            .settings-window {
+                border-radius: var(--radius-medium);
+            }
+
+            .settings-content {
+                min-height: 300px;
+            }
+
+            .settings-panel {
+                padding: var(--space-4);
+            }
+
+            .panel-title {
+                font-size: 17px;
+            }
+
+            .group-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: var(--space-2);
+            }
+        }
+
+        @media (max-width: 500px) {
+            .tab-bar {
+                padding: 0 var(--space-2);
+            }
+
+            .tab-button {
+                padding: var(--space-2) var(--space-3);
+                font-size: 12px;
+            }
+
+            .popup-button,
+            .text-field,
+            .shortcut-input {
+                min-width: 100%;
+            }
+        }
+
+        /* ========================================
+           Accessibility
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            .settings-window,
+            .settings-panel {
+                animation: none;
+            }
+
+            * {
+                transition: none !important;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* ========================================
+           Design Notes
+           ======================================== */
+        .design-notes {
+            position: fixed;
+            bottom: var(--space-4);
+            right: var(--space-4);
+            background: var(--bg-secondary);
+            padding: var(--space-3);
+            border-radius: var(--radius-medium);
+            box-shadow: 0 4px 20px var(--shadow-medium);
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-width: 280px;
+            z-index: 1000;
+        }
+
+        .design-notes h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .design-notes ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .design-notes li {
+            margin-bottom: var(--space-1);
+            padding-left: var(--space-3);
+            position: relative;
+        }
+
+        .design-notes li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========================================
+         Settings Window
+         ======================================== -->
+    <div class="settings-window" role="dialog" aria-label="MacShot Settings">
+        <!-- Title Bar -->
+        <div class="title-bar">
+            <div class="traffic-lights">
+                <button class="traffic-light close" aria-label="Close window"></button>
+                <button class="traffic-light minimize" aria-label="Minimize window"></button>
+                <button class="traffic-light maximize" aria-label="Maximize window"></button>
+            </div>
+            <h1 class="window-title">MacShot Settings</h1>
+        </div>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-bar" role="tablist">
+            <button class="tab-button active" role="tab" aria-selected="true" aria-controls="panel-general">General</button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="panel-hotkeys">Hotkeys</button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="panel-export">Export</button>
+            <button class="tab-button" role="tab" aria-selected="false" aria-controls="panel-advanced">Advanced</button>
+        </nav>
+
+        <!-- Settings Panels -->
+        <div class="settings-content">
+            <!-- General Panel -->
+            <div class="settings-panel active" id="panel-general" role="tabpanel" aria-labelledby="tab-general">
+                <h2 class="panel-title">General</h2>
+
+                <!-- Capture Settings -->
+                <div class="settings-group">
+                    <h3 class="group-title">Capture</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Include Cursor</span>
+                            <span class="item-description">Show mouse cursor in screenshots</span>
+                        </div>
+                        <button class="toggle-switch checked" role="switch" aria-checked="true" aria-label="Include cursor in screenshots"></button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Default Capture Mode</span>
+                            <span class="item-description">Mode used for global hotkey</span>
+                        </div>
+                        <button class="popup-button" aria-label="Default capture mode, currently fullscreen">
+                            Fullscreen
+                            <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 3l3 3 3-3M5 10V0" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Show Flash</span>
+                            <span class="item-description">Flash screen when capturing</span>
+                        </div>
+                        <button class="toggle-switch" role="switch" aria-checked="false" aria-label="Show flash when capturing"></button>
+                    </div>
+                </div>
+
+                <!-- Save Settings -->
+                <div class="settings-group">
+                    <h3 class="group-title">Save Location</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Default Folder</span>
+                            <span class="item-description">Where screenshots are saved</span>
+                        </div>
+                        <input type="text" class="text-field" value="~/Desktop/Screenshots" aria-label="Save location">
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Filename Format</span>
+                            <span class="item-description">Custom naming pattern</span>
+                        </div>
+                        <input type="text" class="text-field" value="screenshot-{date}-{time}" aria-label="Filename format">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hotkeys Panel -->
+            <div class="settings-panel" id="panel-hotkeys" role="tabpanel" aria-labelledby="tab-hotkeys">
+                <h2 class="panel-title">Hotkeys</h2>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Global Shortcuts</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Capture Fullscreen</span>
+                            <span class="item-description">Take a fullscreen screenshot</span>
+                        </div>
+                        <button class="shortcut-input" aria-label="Capture fullscreen shortcut, click to record">
+                            <span class="shortcut-key">⌘</span>
+                            <span class="shortcut-key">⇧</span>
+                            <span class="shortcut-key">F</span>
+                        </button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Capture Region</span>
+                            <span class="item-description">Select area to capture</span>
+                        </div>
+                        <button class="shortcut-input" aria-label="Capture region shortcut, click to record">
+                            <span class="shortcut-key">⌘</span>
+                            <span class="shortcut-key">⇧</span>
+                            <span class="shortcut-key">R</span>
+                        </button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Capture Window</span>
+                            <span class="item-description">Capture specific window</span>
+                        </div>
+                        <button class="shortcut-input" aria-label="Capture window shortcut, click to record">
+                            <span class="shortcut-key">⌘</span>
+                            <span class="shortcut-key">⇧</span>
+                            <span class="shortcut-key">W</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Editor Shortcuts</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Undo</span>
+                        </div>
+                        <button class="shortcut-input" aria-label="Undo shortcut">
+                            <span class="shortcut-key">⌘</span>
+                            <span class="shortcut-key">Z</span>
+                        </button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Redo</span>
+                        </div>
+                        <button class="shortcut-input" aria-label="Redo shortcut">
+                            <span class="shortcut-key">⌘</span>
+                            <span class="shortcut-key">⇧</span>
+                            <span class="shortcut-key">Z</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Export Panel -->
+            <div class="settings-panel" id="panel-export" role="tabpanel" aria-labelledby="tab-export">
+                <h2 class="panel-title">Export</h2>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Image Format</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Default Format</span>
+                            <span class="item-description">File format for screenshots</span>
+                        </div>
+                        <button class="popup-button" aria-label="Default format, currently PNG">
+                            PNG
+                            <svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 3l3 3 3-3M5 10V0" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">JPEG Quality</span>
+                            <span class="item-description">For JPEG format only</span>
+                        </div>
+                        <div class="stepper">
+                            <button class="stepper-button" aria-label="Decrease quality">−</button>
+                            <span class="stepper-value">90%</span>
+                            <button class="stepper-button" aria-label="Increase quality">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="group-title">After Capture</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Open Editor</span>
+                            <span class="item-description">Show annotation editor after capture</span>
+                        </div>
+                        <button class="toggle-switch checked" role="switch" aria-checked="true" aria-label="Open editor after capture"></button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Copy to Clipboard</span>
+                            <span class="item-description">Automatically copy after capture</span>
+                        </div>
+                        <button class="toggle-switch" role="switch" aria-checked="false" aria-label="Copy to clipboard after capture"></button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Play Sound</span>
+                            <span class="item-description">Sound effect when capturing</span>
+                        </div>
+                        <button class="toggle-switch checked" role="switch" aria-checked="true" aria-label="Play sound when capturing"></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Panel -->
+            <div class="settings-panel" id="panel-advanced" role="tabpanel" aria-labelledby="tab-advanced">
+                <h2 class="panel-title">Advanced</h2>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Performance</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Low Quality Mode</span>
+                            <span class="item-description">Reduce quality for faster captures</span>
+                        </div>
+                        <button class="toggle-switch" role="switch" aria-checked="false" aria-label="Enable low quality mode"></button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Hardware Acceleration</span>
+                            <span class="item-description">Use GPU for processing</span>
+                        </div>
+                        <button class="toggle-switch checked" role="switch" aria-checked="true" aria-label="Enable hardware acceleration"></button>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Storage</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Auto-delete Old Files</span>
+                            <span class="item-description">Remove screenshots older than</span>
+                        </div>
+                        <div class="stepper">
+                            <button class="stepper-button" aria-label="Decrease days">−</button>
+                            <span class="stepper-value">30</span>
+                            <button class="stepper-button" aria-label="Increase days">+</button>
+                        </div>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Maximum Storage</span>
+                            <span class="item-description">Delete old files when limit reached</span>
+                        </div>
+                        <div class="stepper">
+                            <button class="stepper-button" aria-label="Decrease gigabytes">−</button>
+                            <span class="stepper-value">5 GB</span>
+                            <button class="stepper-button" aria-label="Increase gigabytes">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-group">
+                    <h3 class="group-title">Updates</h3>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Check for Updates</span>
+                            <span class="item-description">Automatically check for new versions</span>
+                        </div>
+                        <button class="toggle-switch checked" role="switch" aria-checked="true" aria-label="Check for updates automatically"></button>
+                    </div>
+
+                    <div class="group-item">
+                        <div class="item-label">
+                            <span class="item-title">Beta Versions</span>
+                            <span class="item-description">Include beta updates</span>
+                        </div>
+                        <button class="toggle-switch" role="switch" aria-checked="false" aria-label="Include beta versions"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <footer class="window-footer">
+            <button class="footer-button cancel">Cancel</button>
+            <button class="footer-button apply">Apply</button>
+        </footer>
+    </div>
+
+    <!-- Design Notes -->
+    <div class="design-notes">
+        <h4>Design Specifications</h4>
+        <ul>
+            <li>macOS window with traffic light controls</li>
+            <li>Tabbed navigation: General, Hotkeys, Export, Advanced</li>
+            <li>Toggle switches: 42×24px with smooth animation</li>
+            <li>PopUp buttons: min 140px with chevron</li>
+            <li>Shortcut inputs: monospace, recordable</li>
+            <li>Stepper: +/- buttons with centered value</li>
+            <li>Apply/Cancel buttons in footer</li>
+            <li>Auto dark mode via prefers-color-scheme</li>
+            <li>WCAG 2.1 AA compliance</li>
+        </ul>
+    </div>
+
+    <!-- Tab Switching Script -->
+    <script>
+        // Simple tab switching for demo
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active from all tabs
+                document.querySelectorAll('.tab-button').forEach(tab => {
+                    tab.classList.remove('active');
+                    tab.setAttribute('aria-selected', 'false');
+                });
+
+                // Add active to clicked tab
+                button.classList.add('active');
+                button.setAttribute('aria-selected', 'true');
+
+                // Hide all panels
+                document.querySelectorAll('.settings-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+
+                // Show corresponding panel
+                const panelId = button.getAttribute('aria-controls');
+                document.getElementById(panelId).classList.add('active');
+            });
+        });
+
+        // Toggle switch demo
+        document.querySelectorAll('.toggle-switch').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                const isChecked = toggle.classList.contains('checked');
+                toggle.classList.toggle('checked');
+                toggle.setAttribute('aria-checked', !isChecked);
+            });
+        });
+    </script>
+</body>
+</html>

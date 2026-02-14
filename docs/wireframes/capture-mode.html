@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacShot - Capture Mode Wireframe</title>
+    <style>
+        /* ========================================
+           MacShot Design System - Capture Mode
+           macOS 15 Sequoia Style
+           ======================================== */
+
+        /* CSS Variables - Design Tokens */
+        :root {
+            /* Colors - Light Mode */
+            --bg-primary: #F5F5F7;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #000000;
+            --text-secondary: #3C3C42;
+            --text-tertiary: #828287;
+            --accent: #007AFF;
+            --accent-hover: #1F8FFF;
+            --border: rgba(0, 0, 0, 0.15);
+            --separator: rgba(0, 0, 0, 0.1);
+
+            /* Spacing - 8pt Grid */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-7: 32px;
+            --space-8: 40px;
+            --space-9: 48px;
+
+            /* Typography */
+            --font-large-title: 34px;
+            --font-title: 28px;
+            --font-title2: 22px;
+            --font-title3: 20px;
+            --font-headline: 17px;
+            --font-body: 17px;
+            --font-caption: 12px;
+            --font-caption2: 11px;
+
+            /* macOS Materials */
+            --ultra-thin-material: rgba(255, 255, 255, 0.85);
+            --thin-material: rgba(255, 255, 255, 0.9);
+
+            /* Border Radius */
+            --radius-small: 6px;
+            --radius-medium: 10px;
+            --radius-large: 12px;
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1E1E1E;
+                --bg-secondary: #2C2C2E;
+                --text-primary: #FFFFFF;
+                --text-secondary: #EBEBF5;
+                --text-tertiary: #98989D;
+                --accent: #0A84FF;
+                --accent-hover: #409CFF;
+                --border: rgba(255, 255, 255, 0.15);
+                --separator: rgba(255, 255, 255, 0.1);
+                --ultra-thin-material: rgba(30, 30, 30, 0.85);
+                --thin-material: rgba(44, 44, 46, 0.9);
+            }
+        }
+
+        /* Reset & Base */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-8);
+        }
+
+        /* ========================================
+           Floating Capture Panel
+           ======================================== */
+        .capture-panel {
+            background: var(--ultra-thin-material);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-radius: var(--radius-large);
+            padding: var(--space-4);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            max-width: 280px;
+            width: 100%;
+            animation: fadeInUp 0.3s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .panel-header {
+            text-align: center;
+            margin-bottom: var(--space-4);
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--separator);
+        }
+
+        .panel-title {
+            font-size: var(--font-title3);
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.3px;
+        }
+
+        .panel-subtitle {
+            font-size: var(--font-caption);
+            color: var(--text-secondary);
+            margin-top: var(--space-1);
+        }
+
+        /* ========================================
+           Capture Mode Buttons
+           ======================================== */
+        .capture-modes {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .capture-button {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3) var(--space-4);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-medium);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            min-height: 44px; /* Touch target */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .capture-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+        }
+
+        .capture-button:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .capture-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
+        }
+
+        /* Icon styling */
+        .capture-icon {
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-primary);
+            border-radius: var(--radius-small);
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+
+        .capture-button:hover .capture-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .capture-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--text-primary);
+            transition: fill 0.2s ease;
+        }
+
+        .capture-button:hover .capture-icon svg {
+            fill: #FFFFFF;
+        }
+
+        /* Button content */
+        .button-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .button-title {
+            font-size: var(--font-body);
+            font-weight: 500;
+            color: var(--text-primary);
+            letter-spacing: -0.2px;
+        }
+
+        .capture-button:hover .button-title {
+            color: #FFFFFF;
+        }
+
+        .button-description {
+            font-size: var(--font-caption);
+            color: var(--text-tertiary);
+            margin-top: 1px;
+        }
+
+        .capture-button:hover .button-description {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Keyboard shortcut badge */
+        .shortcut-badge {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-1) var(--space-2);
+            background: var(--bg-primary);
+            border-radius: var(--radius-small);
+            font-size: var(--font-caption2);
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+            font-weight: 500;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+
+        .capture-button:hover .shortcut-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: #FFFFFF;
+        }
+
+        /* ========================================
+           Panel Footer
+           ======================================== */
+        .panel-footer {
+            margin-top: var(--space-4);
+            padding-top: var(--space-3);
+            border-top: 1px solid var(--separator);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-info {
+            font-size: var(--font-caption);
+            color: var(--text-tertiary);
+        }
+
+        .settings-link {
+            display: flex;
+            align-items: center;
+            gap: var(--space-1);
+            padding: var(--space-2);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: var(--font-caption);
+            color: var(--text-secondary);
+        }
+
+        .settings-link:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+        }
+
+        .settings-link svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
+        }
+
+        /* ========================================
+           Annotations / Documentation
+           ======================================== */
+        .annotation {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: #FFF;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-small);
+            font-size: var(--font-caption);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        /* ========================================
+           Responsive Design
+           ======================================== */
+        @media (max-width: 320px) {
+            .capture-panel {
+                padding: var(--space-3);
+            }
+
+            .capture-button {
+                padding: var(--space-2) var(--space-3);
+            }
+
+            .capture-icon {
+                width: 28px;
+                height: 28px;
+            }
+
+            .shortcut-badge {
+                display: none; /* Hide shortcuts on very small screens */
+            }
+        }
+
+        /* ========================================
+           Accessibility Enhancements
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            .capture-panel,
+            .capture-button,
+            .settings-link {
+                animation: none;
+                transition: none;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Focus visible for keyboard navigation */
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .capture-button {
+                border-width: 2px;
+            }
+
+            .shortcut-badge {
+                border: 1px solid var(--text-primary);
+            }
+        }
+
+        /* ========================================
+           Design Notes (for reference)
+           ======================================== */
+        .design-notes {
+            position: fixed;
+            bottom: var(--space-4);
+            right: var(--space-4);
+            background: var(--bg-secondary);
+            padding: var(--space-3);
+            border-radius: var(--radius-medium);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            font-size: var(--font-caption);
+            color: var(--text-secondary);
+            max-width: 250px;
+        }
+
+        .design-notes h4 {
+            font-size: var(--font-caption);
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .design-notes ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .design-notes li {
+            margin-bottom: var(--space-1);
+            padding-left: var(--space-3);
+            position: relative;
+        }
+
+        .design-notes li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========================================
+         Capture Mode Floating Panel
+         ======================================== -->
+    <div class="capture-panel" role="dialog" aria-label="Capture Mode Selection">
+        <!-- Panel Header -->
+        <div class="panel-header">
+            <h1 class="panel-title">Choose Capture Mode</h1>
+            <p class="panel-subtitle">Select how you want to capture</p>
+        </div>
+
+        <!-- Capture Mode Buttons -->
+        <div class="capture-modes">
+            <!-- Fullscreen Capture -->
+            <button class="capture-button" aria-label="Capture Fullscreen. Press Command Shift F">
+                <div class="capture-icon">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="5" width="18" height="14" rx="2"/>
+                        <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+                        <line x1="12" y1="3" x2="12" y2="5"/>
+                    </svg>
+                </div>
+                <div class="button-content">
+                    <span class="button-title">Fullscreen</span>
+                    <span class="button-description">Capture entire screen</span>
+                </div>
+                <div class="shortcut-badge">
+                    <span aria-hidden="true">⌘⇧F</span>
+                    <span class="sr-only">Command Shift F</span>
+                </div>
+            </button>
+
+            <!-- Region Capture -->
+            <button class="capture-button" aria-label="Capture Region. Press Command Shift R">
+                <div class="capture-icon">
+                    <!-- SF Symbol: rectangle.dashed -->
+                    <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 2.5c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5v-2c0-.276-.224-.5-.5-.5ZM2.5 6c-.276 0-.5.224-.5.5v3c0 .276.224.5.5.5s.5-.224.5-.5.5v-3c0-.276-.224-.5-.5-.5Zm0 4c-.276 0-.5.224-.5.5v3c0 .276.224.5.5.5s.5-.224.5-.5.5v-3c0-.276-.224-.5-.5-.5Zm13-4c-.276 0-.5.224-.5.5v3c0 .276.224.5.5.5s.5-.224.5-.5.5v-3c0-.276-.224-.5-.5-.5Zm0 4c-.276 0-.5.224-.5.5v3c0 .276.224.5.5.5s.5-.224.5-.5.5v-3c0-.276-.224-.5-.5-.5ZM3 12.5c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5.5v-2c0-.276-.224-.5-.5-.5Zm3 0c-.276 0-.5.224-.5.5v2c0 .276.224.5.5.5s.5-.224.5-.5.5v-2c0-.276-.224-.5-.5-.5Z"/>
+                    </svg>
+                </div>
+                <div class="button-content">
+                    <span class="button-title">Region</span>
+                    <span class="button-description">Select custom area</span>
+                </div>
+                <div class="shortcut-badge">
+                    <span aria-hidden="true">⌘⇧R</span>
+                    <span class="sr-only">Command Shift R</span>
+                </div>
+            </button>
+
+            <!-- Window Capture -->
+            <button class="capture-button" aria-label="Capture Window. Press Command Shift W">
+                <div class="capture-icon">
+                    <!-- SF Symbol: window.loop -->
+                    <svg viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 3C2.44772 3 2 3.44772 2 4V14C2 14.5523 2.44772 15 3 15H15C15.5523 15 16 14.5523 16 14V4C16 3.44772 15.5523 3 15 3H3ZM3 4H15V6H3V4ZM3 7H15V14H3V7ZM4 5H5V5.5H4V5ZM6 5H7V5.5H6V5Z"/>
+                    </svg>
+                </div>
+                <div class="button-content">
+                    <span class="button-title">Window</span>
+                    <span class="button-description">Capture specific window</span>
+                </div>
+                <div class="shortcut-badge">
+                    <span aria-hidden="true">⌘⇧W</span>
+                    <span class="sr-only">Command Shift W</span>
+                </div>
+            </button>
+        </div>
+
+        <!-- Panel Footer -->
+        <div class="panel-footer">
+            <span class="footer-info">Click or use shortcut</span>
+            <button class="settings-link" aria-label="Open Settings">
+                <!-- SF Symbol: gear -->
+                <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.972 2.328a.5.5 0 00-.484-.328H5.502a.5.5 0 00-.494.303l-.388.776a.5.5 0 01-.285.253l-.844.282a.5.5 0 01-.527-.1l-.715-.477a.5.5 0 00-.587.046l-.735.735a.5.5 0 00-.046.587l.477.715a.5.5 0 01.1.527l-.282.844a.5.5 0 01-.253.285l-.776.388a.5.5 0 00-.303.494v1.036a.5.5 0 00.328.484l.776.388a.5.5 0 01.253.285l.282.844a.5.5 0 01-.1.527l-.477.715a.5.5 0 00.046.587l.735.735a.5.5 0 00.587.046l.715-.477a.5.5 0 01.527.1l.844.282a.5.5 0 01.285.253l.388.776a.5.5 0 00.494.303h1.036a.5.5 0 00.484-.328l.388-.776a.5.5 0 01.285-.253l.844-.282a.5.5 0 01.527.1l.715.477a.5.5 0 00.587-.046l.735-.735a.5.5 0 00.046-.587l-.477-.715a.5.5 0 01-.1-.527l.282-.844a.5.5 0 01.253-.285l.776-.388a.5.5 0 00.328-.494V5.502a.5.5 0 00-.328-.484l-.776-.388a.5.5 0 01-.253-.285l-.282-.844a.5.5 0 01.1-.527l.477-.715a.5.5 0 00-.046-.587l-.735-.735a.5.5 0 00-.587-.046l-.715.477a.5.5 0 01-.527-.1l-.844-.282a.5.5 0 01-.285-.253l-.388-.776zM7 4.5a2.5 2.5 0 100 5 2.5 2.5 0 000-5z"/>
+                </svg>
+                Settings
+            </button>
+        </div>
+    </div>
+
+    <!-- Design Notes (for developer reference) -->
+    <div class="design-notes">
+        <h4>Design Specifications</h4>
+        <ul>
+            <li>Floating panel with ultraThinMaterial</li>
+            <li>44pt minimum touch targets</li>
+            <li>SF Symbols: camera.fill, rectangle.dashed, window.loop</li>
+            <li>Keyboard shortcuts shown in monospace font</li>
+            <li>Hover states with scale and shadow</li>
+            <li>Auto dark mode via prefers-color-scheme</li>
+            <li>Reduced motion support</li>
+            <li>WCAG 2.1 AA contrast ratios</li>
+        </ul>
+    </div>
+</body>
+</html>

@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MacShot - Annotation Editor Wireframe</title>
+    <style>
+        /* ========================================
+           MacShot Design System - Annotation Editor
+           macOS 15 Sequoia Style
+           ======================================== */
+
+        :root {
+            /* Colors - Light Mode */
+            --bg-primary: #F5F5F7;
+            --bg-secondary: #FFFFFF;
+            --bg-tertiary: #EDEDED;
+            --text-primary: #000000;
+            --text-secondary: #3C3C42;
+            --text-tertiary: #828287;
+            --accent: #007AFF;
+            --accent-hover: #1F8FFF;
+            --border: rgba(0, 0, 0, 0.15);
+            --separator: rgba(0, 0, 0, 0.1);
+            --shadow-subtle: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+
+            /* Spacing - 8pt Grid */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-5: 20px;
+            --space-6: 24px;
+            --space-7: 32px;
+            --space-8: 40px;
+
+            /* Border Radius */
+            --radius-small: 6px;
+            --radius-medium: 10px;
+            --radius-large: 12px;
+
+            /* macOS Materials */
+            --toolbar-material: rgba(255, 255, 255, 0.9);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1E1E1E;
+                --bg-secondary: #2C2C2E;
+                --bg-tertiary: #3A3A3C;
+                --text-primary: #FFFFFF;
+                --text-secondary: #EBEBF5;
+                --text-tertiary: #98989D;
+                --accent: #0A84FF;
+                --accent-hover: #409CFF;
+                --border: rgba(255, 255, 255, 0.15);
+                --separator: rgba(255, 255, 255, 0.1);
+                --shadow-subtle: rgba(0, 0, 0, 0.3);
+                --shadow-medium: rgba(0, 0, 0, 0.5);
+                --toolbar-material: rgba(44, 44, 46, 0.9);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            background: var(--bg-primary);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========================================
+           Editor Layout
+           ======================================== */
+        .editor-container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ========================================
+           Left Toolbar - Annotation Tools
+           ======================================== */
+        .toolbar-left {
+            width: 52px;
+            background: var(--toolbar-material);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-right: 1px solid var(--separator);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: var(--space-3) 0;
+            gap: var(--space-1);
+            z-index: 10;
+        }
+
+        .tool-button {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .tool-button:hover {
+            background: var(--bg-primary);
+        }
+
+        .tool-button.active {
+            background: var(--accent);
+        }
+
+        .tool-button.active svg {
+            fill: #FFFFFF;
+        }
+
+        .tool-button:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px var(--accent);
+        }
+
+        .tool-button svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--text-primary);
+            transition: fill 0.15s ease;
+        }
+
+        .toolbar-divider {
+            width: 28px;
+            height: 1px;
+            background: var(--separator);
+            margin: var(--space-1) 0;
+        }
+
+        /* Tool tooltip */
+        .tool-button::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 44px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-small);
+            font-size: 11px;
+            white-space: nowrap;
+            box-shadow: 0 2px 8px var(--shadow-medium);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.15s ease;
+            z-index: 100;
+        }
+
+        .tool-button:hover::after {
+            opacity: 1;
+        }
+
+        /* ========================================
+           Center Canvas Area
+           ======================================== */
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-primary);
+            overflow: hidden;
+        }
+
+        .canvas-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-6);
+            overflow: auto;
+        }
+
+        .screenshot-preview {
+            max-width: 100%;
+            max-height: 100%;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-medium);
+            box-shadow: 0 8px 32px var(--shadow-medium);
+            position: relative;
+        }
+
+        /* Simulated screenshot content */
+        .screenshot-content {
+            width: 800px;
+            height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: var(--radius-medium);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        /* Annotation overlay simulation */
+        .annotation-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+        }
+
+        .simulated-annotation {
+            position: absolute;
+            border: 3px solid #FF3B30;
+            border-radius: var(--radius-small);
+            top: 80px;
+            left: 100px;
+            width: 200px;
+            height: 120px;
+        }
+
+        .simulated-arrow {
+            position: absolute;
+            bottom: 60px;
+            right: 150px;
+            width: 80px;
+            height: 2px;
+            background: #FF9500;
+        }
+
+        .simulated-arrow::after {
+            content: '';
+            position: absolute;
+            right: -8px;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #FF9500;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+
+        /* ========================================
+           Bottom Status Bar
+           ======================================== */
+        .status-bar {
+            height: 28px;
+            background: var(--toolbar-material);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 1px solid var(--separator);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-4);
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .canvas-info {
+            font-family: 'SF Mono', Monaco, 'Courier New', monospace;
+        }
+
+        .history-controls {
+            display: flex;
+            gap: var(--space-1);
+        }
+
+        .history-button {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .history-button:hover:not(:disabled) {
+            background: var(--bg-primary);
+        }
+
+        .history-button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .history-button svg {
+            width: 14px;
+            height: 14px;
+            fill: var(--text-secondary);
+        }
+
+        /* ========================================
+           Right Panel - Options
+           ======================================== */
+        .panel-right {
+            width: 240px;
+            background: var(--toolbar-material);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-left: 1px solid var(--separator);
+            display: flex;
+            flex-direction: column;
+            padding: var(--space-4);
+            gap: var(--space-4);
+            overflow-y: auto;
+            z-index: 10;
+        }
+
+        .panel-section {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            letter-spacing: -0.1px;
+        }
+
+        /* Color picker */
+        .color-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-2);
+        }
+
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-small);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.15s ease;
+            position: relative;
+        }
+
+        .color-swatch:hover {
+            transform: scale(1.1);
+        }
+
+        .color-swatch.active {
+            border-color: var(--accent);
+        }
+
+        .color-swatch.active::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 12px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* Stroke width slider */
+        .stroke-control {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .stroke-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--bg-tertiary);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .stroke-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--accent);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.15s ease;
+        }
+
+        .stroke-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .stroke-value {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        /* Export options */
+        .export-options {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-2);
+        }
+
+        .export-button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-medium);
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            transition: all 0.15s ease;
+            min-height: 36px;
+        }
+
+        .export-button:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .export-button:hover svg {
+            fill: white;
+        }
+
+        .export-button svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--text-primary);
+            transition: fill 0.15s ease;
+        }
+
+        .export-button.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .export-button.primary svg {
+            fill: white;
+        }
+
+        .export-button.primary:hover {
+            background: var(--accent-hover);
+            border-color: var(--accent-hover);
+        }
+
+        /* ========================================
+           Responsive Design
+           ======================================== */
+        @media (max-width: 900px) {
+            .panel-right {
+                display: none;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .toolbar-left {
+                width: 44px;
+            }
+
+            .tool-button {
+                width: 32px;
+                height: 32px;
+            }
+
+            .status-bar {
+                font-size: 10px;
+                padding: 0 var(--space-2);
+            }
+        }
+
+        /* ========================================
+           Accessibility
+           ======================================== */
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation: none !important;
+                transition: none !important;
+            }
+        }
+
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* ========================================
+           Design Notes
+           ======================================== */
+        .design-notes {
+            position: fixed;
+            bottom: var(--space-4);
+            right: var(--space-4);
+            background: var(--bg-secondary);
+            padding: var(--space-3);
+            border-radius: var(--radius-medium);
+            box-shadow: 0 4px 20px var(--shadow-medium);
+            font-size: 11px;
+            color: var(--text-secondary);
+            max-width: 280px;
+            z-index: 1000;
+        }
+
+        .design-notes h4 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: var(--space-2);
+            color: var(--text-primary);
+        }
+
+        .design-notes ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .design-notes li {
+            margin-bottom: var(--space-1);
+            padding-left: var(--space-3);
+            position: relative;
+        }
+
+        .design-notes li:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <!-- ========================================
+         Annotation Editor
+         ======================================== -->
+    <div class="editor-container">
+        <!-- Left Toolbar -->
+        <aside class="toolbar-left" role="toolbar" aria-label="Annotation Tools">
+            <!-- Selection Tool -->
+            <button class="tool-button active" data-tooltip="Selection (V)" aria-label="Selection Tool, press V">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 2h6v6H2V2zm0 8h6v6H2v-6zm8-8h6v6h-6V2zm0 8h6v6h-6v-6z"/>
+                </svg>
+            </button>
+
+            <!-- Pen Tool -->
+            <button class="tool-button" data-tooltip="Pen (P)" aria-label="Pen Tool, press P">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M17.5 2.5a2.121 2.121 0 010 3l-10 10L4 17l1.5-3.5 10-10a2.121 2.121 0 010-3l2-2z"/>
+                </svg>
+            </button>
+
+            <!-- Highlight Tool -->
+            <button class="tool-button" data-tooltip="Highlight (H)" aria-label="Highlight Tool, press H">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 15h16v2H2v-2zm2-4h12v2H4v-2zm2-4h8v2H6V7z"/>
+                </svg>
+            </button>
+
+            <!-- Rectangle Tool -->
+            <button class="tool-button" data-tooltip="Rectangle (R)" aria-label="Rectangle Tool, press R">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="2" y="2" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+
+            <!-- Circle Tool -->
+            <button class="tool-button" data-tooltip="Circle (C)" aria-label="Circle Tool, press C">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </button>
+
+            <!-- Arrow Tool -->
+            <button class="tool-button" data-tooltip="Arrow (A)" aria-label="Arrow Tool, press A">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 10h14M12 4l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
+
+            <!-- Text Tool -->
+            <button class="tool-button" data-tooltip="Text (T)" aria-label="Text Tool, press T">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M4 4h12M4 10h12M4 16h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Blur Tool -->
+            <button class="tool-button" data-tooltip="Blur (B)" aria-label="Blur Tool, press B">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="10" cy="10" r="8" fill="currentColor" opacity="0.3"/>
+                </svg>
+            </button>
+
+            <!-- Eraser Tool -->
+            <button class="tool-button" data-tooltip="Eraser (E)" aria-label="Eraser Tool, press E">
+                <svg viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 4l-2-2-10 10 4 4 10-10 2 2z"/>
+                </svg>
+            </button>
+        </aside>
+
+        <!-- Center Canvas -->
+        <main class="canvas-area">
+            <div class="canvas-container">
+                <div class="screenshot-preview" role="img" aria-label="Screenshot preview with annotations">
+                    <div class="screenshot-content">
+                        Screenshot Preview
+                    </div>
+                    <!-- Simulated annotations -->
+                    <div class="annotation-layer">
+                        <div class="simulated-annotation"></div>
+                        <div class="simulated-arrow"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status Bar -->
+            <footer class="status-bar">
+                <div class="status-left">
+                    <span class="canvas-info">800 × 500 px</span>
+                    <span>|</span>
+                    <span>screenshot-2025-02-14.png</span>
+                </div>
+                <div class="status-right">
+                    <div class="history-controls">
+                        <button class="history-button" aria-label="Undo" disabled>
+                            <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 12l-4-4 4-4M1 8h7a5 5 0 015 5v0a5 5 0 01-5 5v0"/>
+                            </svg>
+                        </button>
+                        <button class="history-button" aria-label="Redo" disabled>
+                            <svg viewBox="0 0 14 14" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 12l4-4-4-4M13 8H6a5 5 0 00-5 5v0a5 5 0 005 5v0"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </footer>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="panel-right" aria-label="Annotation Options">
+            <!-- Stroke Width -->
+            <section class="panel-section">
+                <h3 class="panel-title">Stroke Width</h3>
+                <div class="stroke-control">
+                    <input type="range" class="stroke-slider" min="1" max="20" value="3" aria-label="Stroke width">
+                    <span class="stroke-value">3px</span>
+                </div>
+            </section>
+
+            <!-- Color Picker -->
+            <section class="panel-section">
+                <h3 class="panel-title">Color</h3>
+                <div class="color-picker" role="radiogroup" aria-label="Annotation color">
+                    <button class="color-swatch active" style="background: #FF3B30;" aria-label="Red color" aria-pressed="true"></button>
+                    <button class="color-swatch" style="background: #FF9500;" aria-label="Orange color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #FFCC00;" aria-label="Yellow color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #34C759;" aria-label="Green color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #007AFF;" aria-label="Blue color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #5856D6;" aria-label="Purple color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #000000;" aria-label="Black color" aria-pressed="false"></button>
+                    <button class="color-swatch" style="background: #FFFFFF; border: 1px solid var(--border);" aria-label="White color" aria-pressed="false"></button>
+                </div>
+            </section>
+
+            <!-- Export Options -->
+            <section class="panel-section">
+                <h3 class="panel-title">Export</h3>
+                <div class="export-options">
+                    <button class="export-button primary" aria-label="Copy to clipboard">
+                        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 2h8a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V4a2 2 0 012-2zm10 10V4a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2z"/>
+                        </svg>
+                        Copy
+                    </button>
+                    <button class="export-button" aria-label="Save as file">
+                        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M8 11l-4-4h2.5V3h3v4H12l-4 4zm-6 3v-2h12v2H2z"/>
+                        </svg>
+                        Save
+                    </button>
+                    <button class="export-button" aria-label="Share">
+                        <svg viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M10 13a2 2 0 100-4 2 2 0 000 4zM6 9a2 2 0 100-4 2 2 0 000 4zm8-4a2 2 0 100-4 2 2 0 000 4zM7.5 7.5L9 6m-1.5 3L6 10.5M10 6l2.5 2.5"/>
+                        </svg>
+                        Share
+                    </button>
+                </div>
+            </section>
+
+            <!-- Format Options -->
+            <section class="panel-section">
+                <h3 class="panel-title">Format</h3>
+                <select aria-label="Export format" style="width: 100%; padding: var(--space-2); border-radius: var(--radius-small); border: 1px solid var(--border); background: var(--bg-secondary); color: var(--text-primary); font-size: 13px;">
+                    <option>PNG</option>
+                    <option>JPG</option>
+                    <option>HEIC</option>
+                    <option>PDF</option>
+                </select>
+            </section>
+        </aside>
+    </div>
+
+    <!-- Design Notes -->
+    <div class="design-notes">
+        <h4>Design Specifications</h4>
+        <ul>
+            <li>Left toolbar: 52px wide, macOS blur material</li>
+            <li>Tool buttons: 36×36px, 44pt with hover</li>
+            <li>Right panel: 240px, responsive hidden < 900px</li>
+            <li>Color swatches: 28×28px, checkmark for active</li>
+            <li>Status bar: 28px tall with canvas info</li>
+            <li>Keyboard shortcuts in tooltips</li>
+            <li>Undo/Redo with disabled states</li>
+            <li>WCAG 2.1 AA contrast & focus visible</li>
+        </ul>
+    </div>
+</body>
+</html>
