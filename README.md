@@ -1,62 +1,70 @@
 # MacShot
 
-A lightweight macOS screenshot tool with global hotkey support.
+A lightweight macOS screenshot tool (15.0+) with global hotkey support, built with SwiftUI for native performance.
 
-## Overview
+## 🚀 Quick Start
 
-MacShot is a native macOS application (macOS 15.0+) built with SwiftUI that provides fast screenshot capture with configurable global hotkeys and automatic file management.
-
-## Features
-
-- **Global Hotkey**: Capture screenshots from anywhere in macOS
-- **Menu Bar App**: Runs unobtrusively in the menu bar
-- **Smart Naming**: Automatic timestamp-based file naming
-- **Configurable Output**: Custom save locations
-- **Native Performance**: Built with Swift 6.0 for optimal performance
-
-## Requirements
-
-- macOS 15.0 or later
-- Xcode 15.0 or later
+**Requirements:**
+- macOS 15.0+
+- Xcode 15.0+
 - Swift 6.0
 
-## Permissions
-
-MacShot requires the following macOS permissions:
-
-- **Screen Recording**: Required to capture screen content
-- **Accessibility**: Required for global hotkey registration
-- **Automation**: Required for system-level integration
-
-## Project Status
-
-> **Phase**: Implementation in progress
-> **Current Phase**: 01 - Project Setup
-> **Bundle ID**: `com.macshot.app`
-
-## Development
-
-### Build
-
+**Build & Run:**
 ```bash
 # Open in Xcode
 open MacShot.xcodeproj
 
-# Or build from command line
+# Build from command line
 xcodebuild -project MacShot.xcodeproj -scheme MacShot -configuration Debug
 ```
 
-### Structure
+**Required Permissions:**
+- Screen Recording (for capture)
+- Accessibility (for global hotkeys)
+- Automation (for system integration)
+
+## ✨ Features
+
+- 📸 **Global Hotkey**: Capture from any app
+- 🖥️ **Menu Bar Interface**: Unobtrusive operation
+- 📝 **Smart Naming**: Automatic timestamps
+- 💾 **Flexible Storage**: Custom save locations
+- ⚡ **Native Performance**: Swift 6.0 optimization
+
+## 📚 Documentation
+
+Complete documentation is available in the `docs/` directory:
+
+- [**Project Overview & PDR**](docs/project-overview-pdr.md) - Product requirements and vision
+- [**Codebase Summary**](docs/codebase-summary.md) - Architecture and implementation details
+- [**Code Standards**](docs/code-standards.md) - Swift coding guidelines
+- [**System Architecture**](docs/system-architecture.md) - Technical architecture and data flow
+- [**Project Roadmap**](docs/project-roadmap.md) - Development phases and timeline
+- [**Deployment Guide**](docs/deployment-guide.md) - Build, test, and deploy instructions
+
+## 🏗️ Project Structure
 
 ```
 MacShot/
-├── Core/           # Core functionality
-├── Features/       # Feature modules
-├── UI/             # SwiftUI views
-├── System/         # System integration
-└── Resources/      # Assets and resources
+├── Core/                    # Capture engine and file management
+├── Features/                # Feature modules
+├── UI/                      # SwiftUI interfaces
+├── System/                  # Hotkeys and system integration
+└── Resources/               # Assets
 ```
 
-## License
+## 🎯 Current Status
+
+**Phase 2/8** - Capture Engine in progress
+- ✅ Project setup complete
+- 🔄 Capture engine implementation
+- ⏳ File management (next phase)
+- 🗓️ Estimated completion: June 2026
+
+## 📄 License
 
 MIT License - See LICENSE file for details
+
+---
+
+For comprehensive information about development, architecture, and deployment, see the [documentation](docs/).

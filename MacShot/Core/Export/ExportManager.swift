@@ -22,6 +22,7 @@ enum ExportError: Error {
 }
 
 /// Export coordinator managing file save, clipboard, and format export
+@MainActor
 final class ExportManager: ObservableObject {
     // MARK: - Published State
 
@@ -29,6 +30,8 @@ final class ExportManager: ObservableObject {
     @Published var exportProgress: Double = 0
     @Published var errorMessage: String?
 
+    // File manager for file operations
+    // Since this class is @MainActor, this is on main actor too
     private let fileManager = FileManager.default
 
     // MARK: - Export
@@ -36,41 +39,37 @@ final class ExportManager: ObservableObject {
     func export(
         image: NSImage,
         options: ExportOptions,
-        cropper: ImageCropper
+        cropper: some ImageCropper
     ) async throws {
         guard !isExporting else {
             throw ExportError.exportInProgress
         }
 
-        await MainActor.run {
-            isExporting = true
-            exportProgress = 0
-            errorMessage = nil
-        }
+        isExporting = true
+        exportProgress = 0
+        errorMessage = nil
 
         defer {
-            Task { @MainActor in isExporting = false }
+            isExporting = false
         }
 
         do {
-            await MainActor.run { exportProgress = 0.2 }
+            exportProgress = 0.2
             let cropped = cropper.crop(image)
 
             if let url = options.outputPath {
-                await MainActor.run { exportProgress = 0.4 }
+                exportProgress = 0.4
                 try await saveFile(cropped, to: url, options: options)
             }
 
             if options.copyToClipboard {
-                await MainActor.run { exportProgress = 0.8 }
+                exportProgress = 0.8
                 copyToClipboard(cropped)
             }
 
-            await MainActor.run { exportProgress = 1.0 }
+            exportProgress = 1.0
         } catch {
-            await MainActor.run {
-                errorMessage = (error as? ExportError)?.localizedDescription ?? error.localizedDescription
-            }
+            errorMessage = (error as? ExportError)?.localizedDescription ?? error.localizedDescription
             throw error
         }
     }
@@ -86,7 +85,7 @@ final class ExportManager: ObservableObject {
         }
     }
 
-    nonisolated func generateFilename(format: ExportFormat) -> String {
+    func generateFilename(format: ExportFormat) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd_HHmmss"
         let timestamp = formatter.string(from: Date())
@@ -115,13 +114,13 @@ final class ExportManager: ObservableObject {
         pasteboard.setData(data, forType: .png)
     }
 
-    nonisolated func quickCopyToClipboard(_ image: NSImage) {
+    func quickCopyToClipboard(_ image: NSImage) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
     }
 
-    nonisolated func quickSaveToDesktop(_ image: NSImage) -> URL? {
+    func quickSaveToDesktop(_ image: NSImage) -> URL? {
         guard let desktopURL = fileManager.urls(for: .desktopDirectory, in: .userDomainMask).first else {
             return nil
         }

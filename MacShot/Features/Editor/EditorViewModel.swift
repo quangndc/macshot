@@ -137,11 +137,23 @@ final class EditorViewModel {
     /// Show export panel
     var showExportPanel = false
 
-    /// Export manager (shared singleton)
-    private let exportManager = ExportManager()
+    /// Export manager - shared instance
+    /// Use Task.run to initialize properly on main actor
+    private var exportManager: ExportManager?
 
-    /// Image cropper (lazy initialized)
-    private var imageCropper: ImageCropper {
+    /// Get or create export manager on main actor
+    @MainActor
+    func getExportManager() -> ExportManager {
+        if let manager = exportManager {
+            return manager
+        }
+        let manager = ExportManager()
+        exportManager = manager
+        return manager
+    }
+
+    /// Image cropper (lazy initialized) - made internal for ExportPanel access
+    var imageCropper: ImageCropper {
         get { _imageCropper }
         set {
             _imageCropper = newValue
@@ -160,13 +172,15 @@ final class EditorViewModel {
     @ObservationIgnored private var _imageCropper = ImageCropper()
 
     /// Quick copy to clipboard
+    @MainActor
     func copyToClipboard() {
-        exportManager.quickCopyToClipboard(captureResult.image)
+        getExportManager().quickCopyToClipboard(captureResult.image)
     }
 
     /// Quick save to desktop
-    func saveToDesktop() -> URL? {
-        exportManager.quickSaveToDesktop(captureResult.image)
+    @MainActor
+    func saveToDesktop() async -> URL? {
+        return await getExportManager().quickSaveToDesktop(captureResult.image)
     }
 }
 

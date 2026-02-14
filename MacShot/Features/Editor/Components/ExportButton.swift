@@ -47,7 +47,7 @@ struct ExportButton: View {
             ExportPanel(
                 viewModel: viewModel,
                 cropper: viewModel.imageCropper,
-                exportManager: ExportManager()
+                exportManager: viewModel.getExportManager()
             )
         }
         .keyboardShortcut("s", modifiers: .command)
