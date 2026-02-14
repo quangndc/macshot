@@ -44,6 +44,32 @@ struct ExportOptions {
         self.format = format
     }
 
+    /// Initializer with format and output path
+    init(format: ExportFormat, outputPath: URL?) {
+        self.format = format
+        self.outputPath = outputPath
+    }
+
+    /// Initializer with format, output path, and clipboard option
+    init(format: ExportFormat, outputPath: URL?, copyToClipboard: Bool) {
+        self.format = format
+        self.outputPath = outputPath
+        self.copyToClipboard = copyToClipboard
+    }
+
+    /// Initializer with format and JPEG quality
+    init(format: ExportFormat, jpegQuality: Double) {
+        self.format = format
+        self.jpegQuality = max(0.1, min(1.0, jpegQuality))
+    }
+
+    /// Initializer with format, JPEG quality, and output path
+    init(format: ExportFormat, jpegQuality: Double, outputPath: URL?) {
+        self.format = format
+        self.jpegQuality = max(0.1, min(1.0, jpegQuality))
+        self.outputPath = outputPath
+    }
+
     /// Validate quality range
     mutating func setQuality(_ quality: Double) {
         jpegQuality = max(0.1, min(1.0, quality))

@@ -376,42 +376,314 @@ static var defaultQuality: Double
 
 ### Testing Standards
 
-#### Test Naming
+#### Phase 09: Testing Implementation Complete
+
+**Status**: ✅ COMPLETED - 2026-02-14
+
+**Testing Framework**: XCTest fully integrated across all modules
+**Coverage Goal**: >90% line coverage
+**Performance Bench**: <500ms capture latency target
+
+### Test Naming Conventions
+
 ```swift
-// Use descriptive test names
+// Use descriptive test names with clear purpose
 class CaptureEngineTests: XCTestCase {
+    // Success scenarios
     func testCaptureFullscreenSuccess() throws { }
+    func testCaptureRegionWithValidBounds() throws { }
+    func testCaptureWindowExists() throws { }
+
+    // Error scenarios
+    func testCaptureFullscreenPermissionDenied() throws { }
     func testCaptureRegionInvalidBounds() throws { }
     func testCaptureWindowNotFound() throws { }
+
+    // Edge cases
+    func testCaptureMultipleDisplays() throws { }
+    func testCaptureEmptyRegion() throws { }
+    func testCaptureWithCursorHidden() throws { }
 }
 ```
 
-#### Test Structure
+### Test Structure Standards
+
+#### Base Test Class
 ```swift
-class CaptureEngineTests: XCTestCase {
+class MacShotTestCase: XCTestCase {
     var captureEngine: CaptureEngine!
+    var mockFileManager: MockFileManager!
+    var testSettings: AppSettings!
 
     override func setUp() {
         super.setUp()
-        captureEngine = CaptureEngine()
+        // Setup test environment
+        testSettings = AppSettings.defaults
+        mockFileManager = MockFileManager()
+        captureEngine = CaptureEngine(settings: testSettings)
     }
 
     override func tearDown() {
+        // Cleanup
         captureEngine = nil
+        mockFileManager = nil
+        testSettings = nil
         super.tearDown()
     }
 }
 ```
 
-#### Assertion Patterns
+#### Unit Test Structure
 ```swift
-// Use XCTAssert for basic assertions
-XCTAssertNotNil(result.image)
-XCTAssertEqual(result.mode, .fullscreen)
-XCTAssertThrowsError(try captureEngine.capture(mode: .invalid)) { error in
-    XCTAssertEqual(error as? CaptureError, .invalidRegion)
+class CaptureEngineTests: MacShotTestCase {
+    // Test setup helpers
+    private func createTestCaptureResult() -> CaptureResult {
+        let image = NSImage(size: NSSize(width: 800, height: 600))
+        return CaptureResult(
+            image: image,
+            mode: .fullscreen,
+            metadata: CaptureMetadata(
+                timestamp: Date(),
+                displayID: 0,
+                bounds: CGRect(x: 0, y: 0, width: 800, height: 600),
+                scaleFactor: 2.0
+            )
+        )
+    }
+
+    // Test methods
+    func testCaptureFullscreenSuccess() throws {
+        // Given
+        let expectedMode: CaptureMode = .fullscreen
+
+        // When
+        let result = try captureEngine.capture(mode: expectedMode)
+
+        // Then
+        XCTAssertNotNil(result.image)
+        XCTAssertEqual(result.mode, expectedMode)
+        XCTAssertFalse(captureEngine.isCapturing)
+    }
 }
 ```
+
+#### Integration Test Structure
+```swift
+class CaptureFlowIntegrationTests: MacShotTestCase {
+    func testCaptureToEditorWorkflow() throws {
+        // Given
+        let expectation = XCTestExpectation(description: "Capture and editor workflow")
+
+        // When
+        captureEngine.onCaptureComplete = { [weak self] result in
+            // Verify capture result
+            XCTAssertNotNil(result.image)
+
+            // Test editor integration
+            let editor = ImageEditor(result: result)
+            XCTAssertNotNil(editor)
+
+            expectation.fulfill()
+        }
+
+        // Trigger capture
+        try captureEngine.capture(mode: .fullscreen)
+
+        // Wait for async operation
+        wait(for: [expectation], timeout: 5.0)
+    }
+}
+```
+
+### Assertion Patterns
+
+#### Basic Assertions
+```swift
+// Value assertions
+XCTAssertNotNil(result.image, "Capture should return valid image")
+XCTAssertEqual(result.mode, .fullscreen, "Capture mode should match expected")
+XCTAssertTrue(result.image!.size.width > 0, "Image should have valid width")
+
+// Error handling
+XCTAssertThrowsError(try captureEngine.capture(mode: .invalid)) { error in
+    XCTAssertEqual(error as? CaptureError, .invalidRegion, "Should throw invalid region error")
+}
+
+// Performance
+measure {
+    _ = try? captureEngine.capture(mode: .fullscreen)
+}
+```
+
+#### Async Testing
+```swift
+func testAsyncCaptureOperation() async {
+    // Async/await test syntax
+    let result = try? await captureEngine.capture(mode: .fullscreen)
+    XCTAssertNotNil(result, "Async capture should succeed")
+}
+
+func testAsyncCaptureWithTimeout() async {
+    let task = Task {
+        try await captureEngine.capture(mode: .fullscreen)
+    }
+
+    // Timeout handling
+    let timeout = Task.detached(timeout: 2.0) {
+        await task.value
+    }
+
+    do {
+        try await timeout.value
+    } catch {
+        XCTFail("Capture operation timed out: \(error)")
+    }
+}
+```
+
+### Test Data Management
+
+#### Test Fixtures
+```swift
+struct TestFixtures {
+    static let sampleImage = NSImage(size: NSSize(width: 1024, height: 768))
+
+    static let sampleCaptureResult = CaptureResult(
+        image: sampleImage,
+        mode: .fullscreen,
+        metadata: CaptureMetadata(
+            timestamp: Date(),
+            displayID: 0,
+            bounds: CGRect(x: 0, y: 0, width: 1024, height: 768),
+            scaleFactor: 2.0
+        )
+    )
+
+    static let sampleSettings = AppSettings.defaults
+}
+```
+
+#### Mock Objects
+```swift
+class MockFileManager {
+    var savedFiles: [URL] = []
+    var shouldThrowError = false
+
+    func saveScreenshot(_ image: NSImage, name: String) throws -> URL {
+        if shouldThrowError {
+            throw CaptureError.fileSaveFailed(NSError(domain: "Test", code: 1))
+        }
+
+        let url = URL(fileURLWithPath: "/tmp/\(name).png")
+        savedFiles.append(url)
+        return url
+    }
+}
+```
+
+### Performance Testing
+
+#### Performance Metrics
+```swift
+class PerformanceTests: MacShotTestCase {
+    func testCapturePerformance() {
+        measure([.default, .median, .maxStandardDeviation]) {
+            for _ in 0...10 {
+                _ = try? captureEngine.capture(mode: .fullscreen)
+            }
+        }
+    }
+
+    func testMemoryUsage() {
+        measureMetrics([.allocatedMemory, .peakMemory], automaticallyStartMeasuring: false) {
+            // Start measuring
+            startMeasuring()
+
+            // Perform test operation
+            let result = try? captureEngine.capture(mode: .fullscreen)
+
+            // Stop measuring
+            stopMeasuring()
+
+            XCTAssertNotNil(result)
+        }
+    }
+}
+```
+
+#### UI Testing Standards
+```swift
+class UITests: XCTestCase {
+    func testCaptureButtonInteraction() {
+        let app = XCUIApplication()
+        app.launch()
+
+        // Verify initial state
+        XCTAssertFalse(app.buttons["Capture"].isSelected)
+
+        // Tap capture button
+        app.buttons["Capture"].tap()
+
+        // Verify state change
+        XCTAssertTrue(app.buttons["Capture"].isSelected)
+
+        // Verify progress indicator
+        XCTAssertTrue(app.progressIndicators["Capturing"].exists)
+    }
+}
+```
+
+### Test Organization
+
+#### Test Categories
+```swift
+// Unit Tests
+@testable import MacShot
+class CaptureEngineTests: MacShotTestCase { /* ... */ }
+
+// Integration Tests
+class CaptureFlowTests: MacShotTestCase { /* ... */ }
+
+// UI Tests
+class CaptureUITests: XCTestCase { /* ... */ }
+
+// Performance Tests
+class PerformanceTests: MacShotTestCase { /* ... */ }
+```
+
+#### Test Naming Convention
+- `test[Feature][Scenario][ExpectedResult]`
+  - `testCaptureFullscreenSuccess`
+  - `testCaptureRegionInvalidBounds`
+  - `testSettingsPersistenceMigration`
+  - `testExportJPEGQualityHigh`
+
+#### Test Data Best Practices
+- Use test fixtures for consistent test data
+- Mock external dependencies (file system, APIs)
+- Generate test data programmatically when needed
+- Clean up test artifacts after test execution
+
+### Testing Guidelines
+
+#### Test Coverage Priorities
+1. **Critical Paths**: Core capture functionality
+2. **Error Handling**: All error scenarios
+3. **Edge Cases**: Boundary conditions
+4. **Performance**: Resource usage and latency
+5. **UI**: User interaction flows
+
+#### Test Maintenance
+- Keep tests simple and focused
+- Update tests with code changes
+- Remove obsolete tests regularly
+- Use continuous integration for automated testing
+
+#### Test Performance
+- Unit tests should run in seconds
+- Integration tests should run in minutes
+- UI tests should be optimized for speed
+- Performance tests should establish benchmarks
 
 ### Memory Management
 
@@ -624,6 +896,68 @@ struct SettingsView: View {
 ```
 
 ---
+
+## Testing Standards (Phase 09)
+
+### Phase 09: Testing Implementation Complete
+
+**Status**: ✅ COMPLETED - 2026-02-14
+
+**Testing Framework**: XCTest fully integrated across all modules
+**Coverage Goal**: >90% line coverage
+**Performance Bench**: <500ms capture latency target
+
+### Test Organization Structure
+
+```
+Tests/
+├── MacShotTests/
+│   ├── CaptureEngineTests.swift
+│   ├── CaptureModeTests.swift
+│   ├── FileManagementTests.swift
+│   ├── SettingsTests.swift
+│   └── PerformanceTests.swift
+├── MacShotUITests/
+│   ├── CaptureFlowTests.swift
+│   ├── SettingsUITests.swift
+│   └── EditorUITests.swift
+└── TestUtils/
+    ├── MockData.swift
+    ├── TestHelpers.swift
+    └── PerformanceMetrics.swift
+```
+
+### Testing Best Practices
+
+**Test Naming Convention**:
+- Use descriptive names: `test[Feature][Scenario][ExpectedResult]`
+- Example: `testCaptureFullscreenSuccess`
+- Example: `testSettingsPersistenceMigration`
+
+**Test Structure Patterns**:
+- Base test class for common setup
+- Separate test classes for different components
+- Mock objects for isolation
+- Async/await support
+
+**Performance Testing**:
+- Measure capture operations
+- Monitor memory usage
+- Benchmark UI responsiveness
+- Memory leak detection
+
+### Code Review Testing Checklist
+
+During code review, ensure:
+- [ ] Unit tests added for new features
+- [ ] Integration tests for component interaction
+- [ ] Performance benchmarks maintained
+- [ ] Memory leak prevention verified
+- [ ] Error scenarios covered
+- [ ] CI/CD integration updated
+
+---
+
 *Last Updated: 2026-02-14*
-*Version: 1.1.0*
-*Phase 08: Settings Patterns Established*
+*Version: 1.2.0*
+*Phase 09: Testing Standards Complete*
