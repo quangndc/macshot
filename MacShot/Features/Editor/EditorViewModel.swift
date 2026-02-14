@@ -131,6 +131,43 @@ final class EditorViewModel {
     func toggleToolbar() {
         showToolbar.toggle()
     }
+
+    // MARK: - Export
+
+    /// Show export panel
+    var showExportPanel = false
+
+    /// Export manager (shared singleton)
+    private let exportManager = ExportManager()
+
+    /// Image cropper (lazy initialized)
+    private var imageCropper: ImageCropper {
+        get { _imageCropper }
+        set {
+            _imageCropper = newValue
+            // Set image bounds for cropper
+            let imageSize = CGSize(
+                width: captureResult.image.size.width,
+                height: captureResult.image.size.height
+            )
+            _imageCropper.setImageBounds(
+                CGRect(origin: .zero, size: imageSize)
+            )
+        }
+    }
+
+    /// Private storage for image cropper
+    @ObservationIgnored private var _imageCropper = ImageCropper()
+
+    /// Quick copy to clipboard
+    func copyToClipboard() {
+        exportManager.quickCopyToClipboard(captureResult.image)
+    }
+
+    /// Quick save to desktop
+    func saveToDesktop() -> URL? {
+        exportManager.quickSaveToDesktop(captureResult.image)
+    }
 }
 
 // MARK: - Color Presets
