@@ -115,14 +115,19 @@ final class HotkeyManager: ObservableObject {
     // This is more complex and requires additional setup
     // For now, we'll mark this as TODO
     private func installHandler() {
-        // TODO: Install Carbon event handler for hotkey presses
-        // This requires:
-        // 1. Creating an event handler function
-        // 2. Installing it with InstallEventHandler()
-        // 3. Handling the event in our callback
-        // For simplicity, this is a placeholder
+        // Install Carbon event handler for hotkey presses
+        // For now, this remains a placeholder pending proper Carbon API integration
+        // The full implementation requires:
+        // 1. Creating an EventHandlerProcPtr callback function
+        // 2. Using InstallEventHandler() with correct type signatures
+        // 3. Managing the EventHandlerRef for cleanup
+        // 4. Proper bridging between Swift closures and C function pointers
 
-        print("Hotkey handler installation - placeholder")
+        // Note: Carbon API InstallEventHandler requires complex type bridging
+        // that doesn't work directly with Swift closures. Future implementation
+        // should use a global function or @convention(c) wrapper.
+
+        print("Hotkey handler installation - placeholder (requires Carbon API bridging)")
     }
 
     // CLEANUP - Note: deinit cleanup omitted due to Swift 6 concurrency constraints

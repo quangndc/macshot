@@ -29,7 +29,7 @@ final class PerformanceTests: XCTestCase {
             let engine = CaptureEngine()
 
             // Measure fullscreen capture time
-            measure(metrics: [XCTClockMetric()]) {
+            measure(metrics: [XCTClockIDMetric()]) {
                 do {
                     _ = try await engine.captureFullscreen()
                 } catch {
@@ -48,7 +48,7 @@ final class PerformanceTests: XCTestCase {
             let engine = CaptureEngine()
             let testRect = CGRect(x: 100, y: 100, width: 500, height: 400)
 
-            measure(metrics: [XCTClockMetric()]) {
+            measure(metrics: [XCTClockIDMetric()]) {
                 do {
                     _ = try await engine.capture(mode: .region(rect: testRect))
                 } catch {
@@ -63,7 +63,7 @@ final class PerformanceTests: XCTestCase {
             let engine = CaptureEngine()
             let windowID: CGWindowID = 1
 
-            measure(metrics: [XCTClockMetric()]) {
+            measure(metrics: [XCTClockIDMetric()]) {
                 do {
                     _ = try await engine.captureWindow(windowID: windowID)
                 } catch {
@@ -82,7 +82,7 @@ final class PerformanceTests: XCTestCase {
         let options = ExportOptions(format: .png, outputPath: outputFile)
         let cropper = ImageCropper()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             do {
                 try await exportManager.export(image: testImage, options: options, cropper: cropper)
             } catch {
@@ -101,7 +101,7 @@ final class PerformanceTests: XCTestCase {
         let options = ExportOptions(format: .jpeg, jpegQuality: 0.9, outputPath: outputFile)
         let cropper = ImageCropper()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             do {
                 try await exportManager.export(image: testImage, options: options, cropper: cropper)
             } catch {
@@ -121,7 +121,7 @@ final class PerformanceTests: XCTestCase {
         let options = ExportOptions(format: .png, outputPath: outputFile)
         let cropper = ImageCropper()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             do {
                 try await exportManager.export(image: testImage, options: options, cropper: cropper)
             } catch {
@@ -136,7 +136,7 @@ final class PerformanceTests: XCTestCase {
     func testClipboardCopyBenchmark() {
         let testImage = NSImage(size: NSSize(width: 1920, height: 1080))
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             exportManager.quickCopyToClipboard(testImage)
         }
     }
@@ -146,7 +146,7 @@ final class PerformanceTests: XCTestCase {
     func testShapeCreationBenchmark() {
         let engine = TestAnnotationEngine()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             for i in 0..<100 {
                 let rect = CGRect(x: i * 10, y: i * 10, width: 50, height: 50)
                 let shape = RectangleShape(rect: rect, style: .default)
@@ -167,7 +167,7 @@ final class PerformanceTests: XCTestCase {
 
         let testPoint = CGPoint(x: 500, y: 500)
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             // Test hitTest performance
             _ = engine.shapeAtPoint(testPoint, tolerance: 10)
         }
@@ -183,7 +183,7 @@ final class PerformanceTests: XCTestCase {
             engine.addShape(shape)
         }
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             // Undo all
             while engine.canUndo {
                 engine.undo()
@@ -197,7 +197,7 @@ final class PerformanceTests: XCTestCase {
         let endPoint = CGPoint(x: 100, y: 100)
         let style = ShapeStyle.default
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             for _ in 0..<100 {
                 _ = ShapeFactory.createShape(
                     tool: .rectangle,
@@ -268,7 +268,7 @@ final class PerformanceTests: XCTestCase {
         if #available(macOS 15.0, *) {
             let engine = CaptureEngine()
 
-            measure(metrics: [XCTCPMetric()]) {
+            measure(metrics: [XCTCPUMetric()]) {
                 do {
                     for _ in 0..<5 {
                         _ = try await engine.captureFullscreen()
@@ -315,7 +315,7 @@ final class PerformanceTests: XCTestCase {
         }
 
         // Measure time to iterate all shapes (simulates render)
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             // Simulate rendering loop
             for _ in engine.shapes {
                 // Each shape would be drawn here
@@ -331,7 +331,7 @@ final class PerformanceTests: XCTestCase {
 
     func testAppStartupTime() {
         // Measure time to create main components
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             let _ = CaptureEngine()
             let _ = ExportManager()
             let _ = TestAnnotationEngine()
@@ -340,7 +340,7 @@ final class PerformanceTests: XCTestCase {
     }
 
     func testSettingsLoadTime() {
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             // Access all settings
             let _ = SettingsStore.captureFullscreenHotkey
             let _ = SettingsStore.captureRegionHotkey
@@ -361,7 +361,7 @@ final class PerformanceTests: XCTestCase {
         if #available(macOS 15.0, *) {
             let engine = CaptureEngine()
 
-            measure(metrics: [XCTClockMetric()]) {
+            measure(metrics: [XCTClockIDMetric()]) {
                 async let capture1 = Task {
                     try? await engine.captureFullscreen()
                 }
@@ -381,7 +381,7 @@ final class PerformanceTests: XCTestCase {
         let tempDir = FileManager.default.temporaryDirectory
         let cropper = ImageCropper()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             async let export1 = Task {
                 let outputFile = tempDir.appendingPathComponent("concurrent1.png")
                 let options = ExportOptions(format: .png, outputPath: outputFile)
@@ -410,7 +410,7 @@ final class PerformanceTests: XCTestCase {
         if #available(macOS 15.0, *) {
             let engine = CaptureEngine()
 
-            measure(metrics: [XCTClockMetric()]) {
+            measure(metrics: [XCTClockIDMetric()]) {
                 do {
                     _ = try await engine.captureFullscreen()
                 } catch {
@@ -427,7 +427,7 @@ final class PerformanceTests: XCTestCase {
         let options = ExportOptions(format: .png, outputPath: outputFile)
         let cropper = ImageCropper()
 
-        measure(metrics: [XCTClockMetric()]) {
+        measure(metrics: [XCTClockIDMetric()]) {
             do {
                 try await exportManager.export(image: testImage, options: options, cropper: cropper)
             } catch {
