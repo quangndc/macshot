@@ -137,7 +137,7 @@ final class HotkeyManager: ObservableObject {
 
 // HOTKEY - A simple data structure to describe a hotkey
 // Think of it like a recipe card: "press these buttons together"
-struct Hotkey: Codable, Equatable {
+struct Hotkey: Codable, Equatable, Sendable {
     // id: unique identifier for this hotkey
     var id: Int
 

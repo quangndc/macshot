@@ -20,7 +20,7 @@ enum ExportFormat: String, CaseIterable, Codable {
 }
 
 /// Export configuration containing all export settings
-struct ExportOptions {
+struct ExportOptions: Sendable {
     /// Output format (PNG or JPEG)
     var format: ExportFormat = .png
 
