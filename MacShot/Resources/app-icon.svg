@@ -1,0 +1,51 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- MacShot App Icon Design -->
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#007AFF"/>
+      <stop offset="100%" style="stop-color:#5856D6"/>
+    </linearGradient>
+    <linearGradient id="lens-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4A90E2"/>
+      <stop offset="100%" style="stop-color:#007AFF"/>
+    </linearGradient>
+    <linearGradient id="shine-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:0.3"/>
+      <stop offset="100%" style="stop-color:#FFFFFF;stop-opacity:0"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1024" height="1024" rx="228" fill="url(#bg-gradient)"/>
+
+  <!-- Camera body -->
+  <rect x="260" y="280" width="504" height="380" rx="80" fill="#1a1a1a" opacity="0.15"/>
+
+  <!-- Lens -->
+  <circle cx="512" cy="470" r="180" fill="url(#lens-gradient)" stroke="#FFFFFF" stroke-width="8"/>
+  <circle cx="512" cy="470" r="100" fill="#1a1a1a" opacity="0.3"/>
+
+  <!-- Lens reflection -->
+  <ellipse cx="450" cy="400" rx="60" ry="40" fill="url(#shine-gradient)"/>
+  <ellipse cx="574" cy="540" rx="30" ry="20" fill="url(#shine-gradient)"/>
+
+  <!-- Viewfinder corners -->
+  <g stroke="#FFFFFF" stroke-width="12" fill="none" opacity="0.8">
+    <!-- Top left -->
+    <path d="M 320 340 L 380 340 L 380 400"/>
+    <!-- Top right -->
+    <path d="M 644 340 L 704 340 L 704 400"/>
+    <!-- Bottom left -->
+    <path d="M 320 600 L 380 600 L 380 540"/>
+    <!-- Bottom right -->
+    <path d="M 644 600 L 704 600 L 704 540"/>
+  </g>
+
+  <!-- Capture button (bottom center) -->
+  <circle cx="512" cy="720" r="60" fill="#FFFFFF" opacity="0.95"/>
+  <circle cx="512" cy="720" r="50" fill="none" stroke="#007AFF" stroke-width="6"/>
+
+  <!-- Small shutter detail -->
+  <circle cx="500" cy="708" r="8" fill="#1a1a1a" opacity="0.5"/>
+  <circle cx="524" cy="708" r="8" fill="#1a1a1a" opacity="0.5"/>
+</svg>
