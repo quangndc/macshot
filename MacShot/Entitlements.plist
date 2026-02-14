@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- App Sandbox - Required for App Store distribution -->
+    <key>com.apple.security.app-sandbox</key>
+    <true/>
+
+    <!-- File access - User selected files for saving screenshots -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Automation - For global hotkey registration -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+
+    <!-- Screen capture exception - Required for CGWindowList APIs -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.screencapture</string>
+    </array>
+</dict>
+</plist>
