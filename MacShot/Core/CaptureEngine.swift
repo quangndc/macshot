@@ -1,9 +1,9 @@
-// Core capture functionality stub
-// Will be implemented in Phase 02
+// Core capture functionality - Module documentation
+// Actual implementation is in Core/CaptureEngine/ subdirectory:
 
-import Foundation
-
-// Placeholder for capture engine implementation
-class CaptureEngine {
-    // TODO: Implement CGWindowList capture logic
-}
+// - CaptureEngineCoordinator.swift - Main capture engine coordinator
+// - CaptureMode.swift - Screenshot capture modes (fullscreen, region, window)
+// - CaptureResult.swift - Result wrapper with metadata
+// - FullscreenCapture.swift - Fullscreen screenshot implementation
+// - RegionCapture.swift - Region selection and capture
+// - WindowCapture.swift - Window detection and capture
