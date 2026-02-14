@@ -1,12 +1,13 @@
 ---
-title: "Phase 06 - System Integration"
+title: "Phase 07 - System Integration"
 description: "Menu bar icon, global hotkeys, auto-start, and notifications"
-status: pending
+status: completed
 priority: P1
 effort: 4h
 branch: main
 tags: [menu-bar, hotkey, notification]
 created: 2026-02-14
+completed: 2026-02-14
 ---
 
 ## Context Links
