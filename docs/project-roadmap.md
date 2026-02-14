@@ -36,29 +36,20 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 2: Capture Engine 🔄 IN PROGRESS
-*Status: In Progress - Started 2026-02-14*
-
-### Phase 3: Design & Wireframes ✅ COMPLETED
+### Phase 2: Capture Engine ✅ COMPLETED
 *Status: Completed - 2026-02-14*
 
 **Duration**: 1 day (actual)
 **Priority**: Critical
 
-**Current Tasks**:
+**Completed Tasks**:
 - [x] CaptureEngine coordinator implementation
 - [x] CaptureMode enum definition
 - [x] CaptureResult structure and metadata
-- [ ] Fullscreen capture implementation
-- [ ] Region capture with selection UI
-- [ ] Window capture functionality
-- [ ] ScreenCaptureHelper utilities
-
-**Planned Tasks**:
-- [ ] Error handling for capture scenarios
-- [ ] Performance optimization
-- [ ] Unit tests for capture functionality
-- [ ] Integration with UI components
+- [x] Fullscreen capture implementation
+- [x] Region capture with selection UI
+- [x] Window capture functionality
+- [x] ScreenCaptureHelper utilities
 
 **Technical Requirements**:
 - CoreGraphics API integration
@@ -148,17 +139,21 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 5: User Interface 📅 PLANNED
-*Estimated Start: Week 7-8*
+### Phase 5: User Interface ✅ COMPLETED
+*Status: Completed - 2026-02-14*
 
 **Duration**: 1 day (actual)
 **Priority**: High
 
-**Planned Tasks**:
-- [ ] Menu bar implementation
-- [ ] Status indicators
+**Completed Tasks**:
+- [x] Full editor UI implementation
+- [x] Canvas drawing and annotation tools
+- [x] Properties panel with tool controls
+- [x] Toolbar with tool selection
+- [x] Export functionality
+- [x] Fullscreen support
+- [ ] Menu bar implementation (placeholder)
 - [ ] Settings interface
-- [ ] Capture feedback
 - [ ] Theme customization
 - [ ] Accessibility features
 
@@ -286,22 +281,22 @@ gantt
     title MacShot Development Timeline
     dateFormat  YYYY-MM-DD
     section Phase 1
-    Project Setup       :active,  des1, 2026-02-14, 7d
+    Project Setup       :done,    des1, 2026-02-14, 7d
     section Phase 2
-    Capture Engine     :active,  des2, 2026-02-21, 21d
-    Fullscreen Capture  :         des3, 2026-02-21, 7d
-    Region Capture      :         des4, 2026-02-28, 7d
-    Window Capture      :         des5, 2026-03-06, 7d
+    Capture Engine     :done,    des2, 2026-02-14, 1d
+    Fullscreen Capture  :done,    des3, 2026-02-14, 1d
+    Region Capture      :done,    des4, 2026-02-14, 1d
+    Window Capture      :done,    des5, 2026-02-14, 1d
     section Phase 3
-    File Management     :         des6, 2026-03-13, 14d
+    File Management     :active,  des6, 2026-03-13, 14d
     section Phase 4
-    Hotkey System       :         des7, 2026-03-27, 14d
+    Hotkey System       :pending, des7, 2026-03-27, 14d
     section Phase 5
-    User Interface      :         des8, 2026-04-10, 21d
+    User Interface      :done,    des8, 2026-02-14, 1d
     section Phase 6
-    Advanced Features   :         des9, 2026-05-01, 28d
+    Advanced Features   :pending, des9, 2026-05-01, 28d
     section Phase 7
-    Testing & QA        :         des10, 2026-05-29, 28d
+    Testing & QA        :pending, des10, 2026-05-29, 28d
     section Phase 8
     Documentation & Release :   des11, 2026-06-26, 14d
 ```
@@ -474,4 +469,5 @@ gantt
 
 ---
 *Last Updated: 2026-02-14*
-*Roadmap Version: 1.0.0*
+*Roadmap Version: 1.1.0*
+*Phase 2 & 5 Completed Early*

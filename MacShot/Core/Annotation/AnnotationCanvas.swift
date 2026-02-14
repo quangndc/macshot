@@ -8,18 +8,18 @@ struct AnnotationCanvas: View {
     // MARK: - State
 
     @State private var engine: AnnotationEngine
-    @State private var toolManager: ToolManager
     @State private var dragStartPoint: CGPoint?
     @State private var currentDragShape: (any Shape)?
 
     let backgroundImage: NSImage
+    let toolManager: ToolManager
 
     // MARK: - Initialization
 
-    init(backgroundImage: NSImage) {
+    init(backgroundImage: NSImage, toolManager: ToolManager = ToolManager()) {
         self.backgroundImage = backgroundImage
+        self.toolManager = toolManager
         self._engine = State(initialValue: AnnotationEngine())
-        self._toolManager = State(initialValue: ToolManager())
     }
 
     // MARK: - Body
@@ -144,7 +144,7 @@ struct AnnotationCanvas: View {
 
     private func updateDragShape(at point: CGPoint) {
         guard let startPoint = dragStartPoint,
-              var shape = currentDragShape else {
+              let shape = currentDragShape else {
             return
         }
 

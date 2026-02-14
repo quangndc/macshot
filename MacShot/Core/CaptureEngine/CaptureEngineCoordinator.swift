@@ -4,6 +4,9 @@
 import AppKit
 import CoreGraphics
 
+/// Callback type for capture completion
+typealias CaptureCompletionCallback = (CaptureResult) -> Void
+
 /// Main capture engine that coordinates all capture operations
 @MainActor
 final class CaptureEngine: ObservableObject {
@@ -15,6 +18,9 @@ final class CaptureEngine: ObservableObject {
 
     /// Whether to include cursor in screenshots
     var includeCursor = true
+
+    /// Optional callback invoked when capture completes
+    var onCaptureComplete: CaptureCompletionCallback?
 
     /// Capture screenshot using the specified mode
     @available(macOS 15.0, *)
@@ -42,6 +48,9 @@ final class CaptureEngine: ObservableObject {
 
         // Update published image
         capturedImage = result.image
+
+        // Notify callback if set
+        onCaptureComplete?(result)
 
         return result
     }

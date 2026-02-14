@@ -4,9 +4,13 @@
 import Foundation
 
 /// All available annotation tools for the canvas
-enum ToolType: String, CaseIterable {
+enum ToolType: String, CaseIterable, Identifiable {
     /// Select and manipulate existing shapes
     case select
+
+    // MARK: - Identifiable
+
+    var id: String { rawValue }
 
     /// Draw rectangle shapes
     case rectangle

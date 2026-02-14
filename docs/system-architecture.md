@@ -158,36 +158,48 @@ final class WindowCapture {
 - Dropdown menu with options
 - Status indicators
 - Settings access
+**Status**: Placeholder implementation
 
-**Implementation**:
+#### Editor UI Module
+**Purpose**: Full-featured screenshot annotation editor
+**Status**: Fully implemented
+
+**EditorView** - Main editor layout:
 ```swift
-struct MenuBarView: View {
-    @StateObject private var captureEngine = CaptureEngine()
-    @State private var showingSettings = false
+struct EditorView: View {
+    let result: CaptureResult
+    @State private var viewModel: EditorViewModel
 
     var body: some View {
-        MenuExtra {
-            Button("Fullscreen Capture") {
-                Task {
-                    try await captureEngine.captureFullscreen()
-                }
+        VStack(spacing: 0) {
+            EditorToolbar(viewModel: viewModel, onToggleFullscreen: {})
+            HStack(spacing: 0) {
+                CanvasContainer(result: result, viewModel: viewModel)
+                PropertiesPanel(viewModel: viewModel)
             }
-            Button("Region Capture") {
-                Task {
-                    try await captureEngine.captureRegion()
-                }
-            }
-            Divider()
-            Button("Settings") {
-                showingSettings = true
-            }
-        } label: {
-            Image(systemName: "camera")
-                .font(.title)
         }
+        .frame(minWidth: 800, minHeight: 600)
     }
 }
 ```
+
+**EditorToolbar** - Tool selection and actions:
+- Tool buttons for all annotation tools
+- Color preset selection
+- Panel toggles and fullscreen control
+- Export functionality
+
+**EditorWindow** - Native window wrapper:
+- Auto-resizing based on image dimensions
+- Fullscreen capabilities
+- Minimum size enforcement
+- Timestamp-based window titles
+
+**EditorViewModel** - State management:
+- Tool selection and style properties
+- Color and stroke width controls
+- Panel visibility toggles
+- Integration with tool manager
 
 #### RegionSelectionOverlay
 **Purpose**: Interactive region selection interface
@@ -196,6 +208,7 @@ struct MenuBarView: View {
 - Real-time preview
 - Confirm/cancel options
 - Keyboard shortcuts
+**Status**: Planned
 
 ### 4. System Integration Layer
 
@@ -421,56 +434,64 @@ enum CaptureError: Error, LocalizedError {
 
 ## UI Architecture
 
-### Design System Integration
-The UI architecture fully integrates with the established design system:
+### Implemented Editor UI Module
 
 #### Component Hierarchy
 ```swift
-// Base UI components using design tokens
+// Implemented Editor UI components
 BaseView
-├── MenuBarView               // Main application menu
-├── CaptureOverlay           // Capture mode interface
-├── AnnotationEditor         // Markup tools
-└── SettingsWindow           // Configuration interface
+├── MenuBarView               // Main application menu (placeholder)
+├── EditorWindow              // Full-featured editor window
+│   ├── EditorView            // Main editor layout
+│   │   ├── EditorToolbar     // Tool selection and actions
+│   │   ├── CanvasContainer   // Image canvas with annotations
+│   │   └── PropertiesPanel  // Tool properties editor
+│   └── EditorViewModel       // State management
+└── RegionSelectionOverlay   // Planned: Region selection
 ```
 
-#### Design Token Usage
+#### Editor Layout Architecture
+The editor follows a clean, modular design:
+
+**Main Layout**:
+- **Top Toolbar**: Tool selection, color presets, panel toggles
+- **Center Canvas**: Interactive drawing surface
+- **Right Panel**: Tool properties and style controls
+- **Fullscreen Support**: Native window fullscreen toggle
+
+**State Management**:
 ```swift
-// Consistent styling across all components
-struct StyledButton: View {
-    var body: some View {
-        Button(action: action) {
-            Text(label)
-                .font(.body)
-                .fontWeight(.semibold)
-                .foregroundColor(.white)
-                .padding(.horizontal, .space4)
-                .padding(.vertical, .space2)
-                .frame(minHeight: 32)
-                .background(Color.accent)
-                .cornerRadius(6)
-        }
-    }
+@Observable
+final class EditorViewModel {
+    var selectedTool: ToolType
+    var selectedColor: Color
+    var strokeWidth: CGFloat
+    var opacity: Double
+    var showProperties: Bool
+    var showToolbar: Bool
 }
 ```
 
-#### Wireframe References
-The UI architecture implements the Phase 03 wireframes:
+#### Design Implementation
+The editor implements a clean, functional design:
 
-1. **Capture Mode** (`/docs/wireframes/capture-mode.png`)
-   - Interactive selection overlay
-   - Real-time preview capabilities
-   - Confirmation/cancel controls
+- **Material Effects**: Ultra-thin material backgrounds
+- **Responsive Layout**: Auto-resizing based on image size
+- **Tool Integration**: Direct binding with annotation engine
+- **Export Pipeline**: Built-in export functionality
+- **Theme Support**: System theme integration
 
-2. **Annotation Editor** (`/docs/wireframes/annotation-editor.png`)
-   - Markup toolbar with design tokens
-   - Color selection using system palette
-   - Tool sizing following Apple HIG
+#### Annotation Tool System
+```swift
+enum ToolType: CaseIterable {
+    case select, arrow, line, rectangle, ellipse, text, spotlight
+}
 
-3. **Settings Window** (`/docs/wireframes/settings-window.png`)
-   - Left sidebar navigation
-   - Right panel configuration
-   - Consistent spacing and typography
+struct ToolButton: View {
+    // Visual feedback for selected state
+    // Tool-specific icons and behaviors
+}
+```
 
 ## Extension Points
 
@@ -491,5 +512,5 @@ The UI architecture implements the Phase 03 wireframes:
 
 ---
 *Last Updated: 2026-02-14*
-*Architecture Version: 1.1.0*
-*Phase 03: UI Architecture Complete*
+*Architecture Version: 1.2.0*
+*Phase 05: Editor UI Complete*

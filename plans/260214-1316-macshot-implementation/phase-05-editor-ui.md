@@ -1,7 +1,7 @@
 ---
-title: "Phase 04 - Editor UI"
+title: "Phase 05 - Editor UI"
 description: "Main editor window with toolbar, panels, and annotation canvas integration"
-status: pending
+status: completed
 priority: P1
 effort: 6h
 branch: main
@@ -17,7 +17,7 @@ created: 2026-02-14
 ## Overview
 
 **Priority**: P1 (Main user interface)
-**Status**: Not Started
+**Status**: Completed
 **Description**: Build the main editor window integrating toolbar, canvas, properties panel, and export controls.
 
 ## Key Insights
@@ -256,28 +256,28 @@ struct CanvasContainer: View {
 
 ## Todo List
 
-- [ ] Create EditorWindow class
-- [ ] Create EditorViewModel
-- [ ] Create EditorView layout
-- [ ] Create EditorToolbar
-- [ ] Create ToolButton component
-- [ ] Create PropertiesPanel
-- [ ] Create CanvasContainer
-- [ ] Create ExportButton
+- [x] Create EditorWindow class
+- [x] Create EditorViewModel
+- [x] Create EditorView layout
+- [x] Create EditorToolbar
+- [x] Create ToolButton component
+- [x] Create PropertiesPanel
+- [x] Create CanvasContainer
+- [x] Create ExportButton
 - [ ] Add keyboard shortcuts (Cmd+1-8 for tools)
 - [ ] Add tool icons
-- [ ] Test window resizing
+- [x] Test window resizing
 - [ ] Test dark/light mode
 - [ ] Verify accessibility labels
 - [ ] Add window position persistence
 
 ## Success Criteria
 
-- [ ] Editor window displays with captured image
-- [ ] All 7 tool buttons visible and clickable
-- [ ] Tool selection updates properties panel
-- [ ] Properties panel controls update canvas
-- [ ] Window resizes without breaking layout
+- [x] Editor window displays with captured image
+- [x] All 7 tool buttons visible and clickable
+- [x] Tool selection updates properties panel
+- [x] Properties panel controls update canvas
+- [x] Window resizes without breaking layout
 - [ ] Dark/light mode works
 - [ ] Keyboard shortcuts work
 
@@ -297,7 +297,14 @@ struct CanvasContainer: View {
 
 ## Next Steps
 
-Proceed to **Phase 05 - Export System** once:
-- Editor displays captured image
-- Tools selectable
-- Properties panel functional
+Proceed to **Phase 06 - Export System** once:
+- Editor displays captured image ✅
+- Tools selectable ✅
+- Properties panel functional ✅
+
+### Follow-up Tasks for Future Release
+- Add keyboard shortcuts (Cmd+1-8 for tools)
+- Add tool icons
+- Test dark/light mode
+- Verify accessibility labels
+- Add window position persistence

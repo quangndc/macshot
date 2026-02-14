@@ -8,7 +8,6 @@ struct MacShotApp: App {
 
     var body: some Scene {
         // Empty scene for menu bar only app
-        // Will be configured in later phases
         Settings {
             EmptyView()
         }
@@ -17,13 +16,33 @@ struct MacShotApp: App {
 
 // App delegate for macOS lifecycle events
 class AppDelegate: NSObject, NSApplicationDelegate {
+    // Capture engine instance
+    var captureEngine: CaptureEngine?
+    var editorWindow: EditorWindow?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // TODO: Initialize menu bar and capture engine
-        print("MacShot launched")
+        // Initialize capture engine
+        captureEngine = CaptureEngine()
+        captureEngine?.onCaptureComplete = { [weak self] result in
+            self?.showEditor(with: result)
+        }
+
+        print("MacShot launched - Capture Engine initialized")
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
         // Keep app running in menu bar
         return false
+    }
+
+    // MARK: - Editor
+
+    @MainActor
+    private func showEditor(with result: CaptureResult) {
+        // Close existing editor if open
+        editorWindow?.close()
+
+        // Create and show new editor window
+        editorWindow = EditorWindow(captureResult: result)
     }
 }
