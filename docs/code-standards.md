@@ -270,6 +270,11 @@ enum CaptureError: Error, LocalizedError {
     case displayNotFound
     case permissionDenied
     case invalidRegion
+    case windowNotFound
+    case fileSaveFailed(Error)
+    case directoryCreationFailed
+    case fileCollisionDetected
+    case exportFailed(Error)
 
     var errorDescription: String? {
         switch self {
@@ -279,6 +284,16 @@ enum CaptureError: Error, LocalizedError {
             return "Screen recording permission denied"
         case .invalidRegion:
             return "Invalid capture region"
+        case .windowNotFound:
+            return "Window not found"
+        case .fileSaveFailed(let error):
+            return "Failed to save file: \(error.localizedDescription)"
+        case .directoryCreationFailed:
+            return "Failed to create save directory"
+        case .fileCollisionDetected:
+            return "File already exists"
+        case .exportFailed(let error):
+            return "Export failed: \(error.localizedDescription)"
         }
     }
 }
@@ -390,6 +405,20 @@ static var defaultQuality: Double
 - Corrected UInt32 type casts
 - Proper availability checks for SMAppService
 - Simplified export validation logic
+
+**Edge Case Handling Improvements (v0.9.1)**:
+- Enhanced file management with directory validation
+- File collision detection and resolution strategies
+- Capture mode validation before execution
+- Retry logic for transient failures
+- Improved error handling and recovery patterns
+
+**CGEventTap Implementation (v0.9.2)**:
+- Replaced deprecated Carbon API with modern CGEventTap
+- Swift-C interop for efficient event processing
+- Thread-safe event handling with @MainActor dispatch
+- Accessibility permission management with system settings integration
+- Proper resource cleanup and memory management
 
 ### Test Naming Conventions
 
@@ -968,5 +997,5 @@ During code review, ensure:
 ---
 
 *Last Updated: 2026-02-15*
-*Version: 1.3.0*
-*Phase 09: Testing Complete, Bug fixes applied (v0.9.1)*
+*Version: 1.4.0*
+*Phase 09: Testing Complete, Edge case fixes implemented (v0.9.1 - v0.9.2)*

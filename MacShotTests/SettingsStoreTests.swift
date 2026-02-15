@@ -3,7 +3,7 @@
 
 import XCTest
 import SwiftUI
-import Carbon  // For cmdKey, shiftKey constants
+import ApplicationServices  // For CGEventFlags
 @testable import MacShot
 
 @MainActor
@@ -17,8 +17,11 @@ final class SettingsStoreTests: XCTestCase {
 
     override func tearDown() {
         // Clean up test keys
-        for key in testKeys {
-            UserDefaults.standard.removeObject(forKey: key)
+        let keysToClean = testKeys
+        Task { @MainActor in
+            for key in keysToClean {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
         }
         super.tearDown()
     }
@@ -35,7 +38,7 @@ final class SettingsStoreTests: XCTestCase {
 
         XCTAssertEqual(hotkey.id, 1)
         XCTAssertEqual(hotkey.keyCode, 0x0F)
-        XCTAssertEqual(hotkey.modifiers, UInt32(cmdKey | shiftKey))
+        XCTAssertEqual(hotkey.modifiers, UInt32(CGEventFlags.maskCommand.rawValue | CGEventFlags.maskShift.rawValue))
         XCTAssertEqual(hotkey.description, "Cmd+Shift+5")
     }
 
@@ -44,7 +47,7 @@ final class SettingsStoreTests: XCTestCase {
 
         XCTAssertEqual(hotkey.id, 2)
         XCTAssertEqual(hotkey.keyCode, 0x10)
-        XCTAssertEqual(hotkey.modifiers, UInt32(cmdKey | shiftKey))
+        XCTAssertEqual(hotkey.modifiers, UInt32(CGEventFlags.maskCommand.rawValue | CGEventFlags.maskShift.rawValue))
         XCTAssertEqual(hotkey.description, "Cmd+Shift+6")
     }
 
@@ -53,14 +56,14 @@ final class SettingsStoreTests: XCTestCase {
 
         XCTAssertEqual(hotkey.id, 3)
         XCTAssertEqual(hotkey.keyCode, 0x11)
-        XCTAssertEqual(hotkey.modifiers, UInt32(cmdKey | shiftKey))
+        XCTAssertEqual(hotkey.modifiers, UInt32(CGEventFlags.maskCommand.rawValue | CGEventFlags.maskShift.rawValue))
         XCTAssertEqual(hotkey.description, "Cmd+Shift+7")
     }
 
     func testHotkeyPersistence() {
         // Modify hotkey
         let original = SettingsStore.captureFullscreenHotkey
-        let modified = Hotkey(id: 99, keyCode: 0x20, modifiers: 0, description: "Test")
+        let modified = Hotkey(id: 99, keyCode: 0x20, flags: [], description: "Test")
 
         SettingsStore.captureFullscreenHotkey = modified
 
@@ -351,7 +354,7 @@ final class SettingsStoreTests: XCTestCase {
 
     func testCodableConformance() {
         // Test that Hotkey can be encoded/decoded
-        let hotkey = Hotkey(id: 123, keyCode: 0x30, modifiers: UInt32(cmdKey), description: "Test")
+        let hotkey = Hotkey(id: 123, keyCode: 0x30, flags: [.maskCommand], description: "Test")
 
         let encoder = JSONEncoder()
         let encoded = try? encoder.encode(hotkey)

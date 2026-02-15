@@ -27,6 +27,52 @@ final class AnnotationEngine {
         undoManager.levelsOfUndo = maxUndoLevels
     }
 
+    // MARK: - Memory Monitoring
+
+    /// Current memory usage in bytes
+    private var currentMemoryUsage: Int64 {
+        var info = mach_task_basic_info()
+        var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size)/4
+
+        let kerr: kern_return_t = withUnsafeMutablePointer(to: &info) {
+            $0.withMemoryRebound(to: integer_t.self, capacity: 1) {
+                task_info(
+                    mach_task_self_,
+                    task_flavor_t(MACH_TASK_BASIC_INFO),
+                    $0,
+                    &count
+                )
+            }
+        }
+
+        return kerr == KERN_SUCCESS ? Int64(info.resident_size) : 0
+    }
+
+    /// Estimated memory used by shapes
+    private var estimatedShapeMemory: Int64 {
+        // Rough estimate: 1KB per shape (overestimate for safety)
+        Int64(shapes.count * 1024)
+    }
+
+    /// Adaptive undo limit based on memory usage
+    private var adaptiveUndoLimit: Int {
+        let totalMemory = currentMemoryUsage
+
+        if totalMemory > 200_000_000 {  // >200MB used
+            return 10  // Reduce limit
+        } else if totalMemory > 100_000_000 {  // >100MB used
+            return 25  // Moderate limit
+        } else {
+            return 50  // Full limit
+        }
+    }
+
+    /// Check if memory pressure is high
+    func checkMemoryPressure() -> Bool {
+        let usage = currentMemoryUsage
+        return usage > 150_000_000  // Warn at 150MB
+    }
+
     // MARK: - Shape CRUD
 
     /// Add a new shape to the canvas
@@ -212,6 +258,47 @@ final class AnnotationEngine {
     /// Check if canvas is empty
     var isEmpty: Bool {
         shapes.isEmpty
+    }
+
+    // MARK: - Export Validation
+
+    /// Check if has annotations for export
+    var hasAnnotations: Bool {
+        !shapes.isEmpty
+    }
+
+    /// Check if can export (has valid annotations)
+    func canExport() -> Bool {
+        hasAnnotations
+    }
+
+    /// Export annotations with validation
+    func exportAnnotations() async throws -> [any Shape] {
+        guard canExport() else {
+            throw AnnotationError.noAnnotations
+        }
+
+        return shapes
+    }
+}
+
+// MARK: - Annotation Errors
+
+enum AnnotationError: Error, LocalizedError {
+    case noAnnotations
+
+    var errorDescription: String? {
+        switch self {
+        case .noAnnotations:
+            return "No annotations to export"
+        }
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .noAnnotations:
+            return "Add annotations before exporting"
+        }
     }
 }
 

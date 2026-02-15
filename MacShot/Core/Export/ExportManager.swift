@@ -5,11 +5,22 @@ import SwiftUI
 import AppKit
 
 /// Export errors
-enum ExportError: Error {
+enum ExportError: Error, LocalizedError {
     case noImage
     case saveFailed(Error)
     case clipboardFailed
     case exportInProgress
+    case insufficientDiskSpace(required: Int64, available: Int64)
+    case noOutputLocation
+    case locationNotWritable(URL)
+    case fileNotWritable(URL)
+    case invalidOutputLocation(URL)
+    case invalidImage(size: CGSize)
+    case tiffConversionFailed(size: CGSize, reason: String)
+    case bitmapCreationFailed(size: CGSize, tiffSize: Int)
+    case pngEncodingFailed(size: CGSize, bitsPerSample: Int, samplesPerPixel: Int)
+    case jpegEncodingFailed(size: CGSize, quality: Double)
+    case conversionFailed
 
     var localizedDescription: String {
         switch self {
@@ -17,6 +28,35 @@ enum ExportError: Error {
         case .saveFailed(let error): return "Save failed: \(error.localizedDescription)"
         case .clipboardFailed: return "Failed to copy to clipboard"
         case .exportInProgress: return "Export already in progress"
+        case .insufficientDiskSpace(let required, let available):
+            let requiredMB = required / 1_000_000
+            let availableMB = available / 1_000_000
+            return "Not enough disk space. Need \(requiredMB)MB, only \(availableMB)MB available."
+        case .noOutputLocation: return "No output location specified"
+        case .locationNotWritable(let url): return "Cannot write to: \(url.path)"
+        case .fileNotWritable(let url): return "File is locked or read-only: \(url.lastPathComponent)"
+        case .invalidOutputLocation(let url): return "Invalid output location: \(url.path)"
+        case .invalidImage(let size): return "Invalid image for export: \(Int(size.width)) x \(Int(size.height))"
+        case .tiffConversionFailed(let size, let reason): return "TIFF conversion failed for \(Int(size.width)) x \(Int(size.height)) image: \(reason)"
+        case .bitmapCreationFailed(let size, let tiffSize): return "Bitmap creation failed: image=\(Int(size.width))x\(Int(size.height)), tiff=\(tiffSize) bytes"
+        case .pngEncodingFailed(let size, let bits, let samples): return "PNG encoding failed: \(Int(size.width))x\(Int(size.height)), \(bits) bits, \(samples) samples"
+        case .jpegEncodingFailed(let size, let quality): return "JPEG encoding failed: \(Int(size.width))x\(Int(size.height)) at quality \(Int(quality * 100))%"
+        case .conversionFailed: return "Failed to convert image format"
+        }
+    }
+
+    var errorDescription: String? {
+        localizedDescription
+    }
+
+    var recoverySuggestion: String? {
+        switch self {
+        case .invalidImage: return "Try capturing the screenshot again."
+        case .pngEncodingFailed, .jpegEncodingFailed: return "Try using a different export format."
+        case .tiffConversionFailed, .bitmapCreationFailed: return "The image may be corrupted. Try recapturing."
+        case .insufficientDiskSpace: return "Free up disk space or choose a different location."
+        case .locationNotWritable, .fileNotWritable: return "Choose a different save location or check permissions."
+        default: return nil
         }
     }
 }
@@ -33,6 +73,79 @@ final class ExportManager: ObservableObject {
     // File manager for file operations
     // Since this class is @MainActor, this is on main actor too
     private let fileManager = FileManager.default
+
+    // MARK: - Validation
+
+    private func validateOutputLocation(_ url: URL) async throws {
+        let manager = FileManager.default
+
+        // Check if parent directory exists
+        let parentURL = url.deletingLastPathComponent()
+        var isDirectory: ObjCBool = false
+
+        if !manager.fileExists(atPath: parentURL.path, isDirectory: &isDirectory) {
+            // Try to create directory
+            try manager.createDirectory(at: parentURL, withIntermediateDirectories: true)
+        }
+
+        guard isDirectory.boolValue || manager.fileExists(atPath: parentURL.path, isDirectory: &isDirectory) else {
+            throw ExportError.invalidOutputLocation(url)
+        }
+
+        // Check write permission
+        if !manager.isWritableFile(atPath: parentURL.path) {
+            throw ExportError.locationNotWritable(url)
+        }
+
+        // Check if file exists and is locked
+        if manager.fileExists(atPath: url.path) {
+            if !manager.isWritableFile(atPath: url.path) {
+                throw ExportError.fileNotWritable(url)
+            }
+        }
+    }
+
+    private func validateDiskSpace(for image: NSImage, format: ExportFormat) async throws {
+        // Get volume attributes using URL resource values
+        // Use root directory to get overall disk space
+        let rootURL = URL(fileURLWithPath: "/")
+
+        guard let resourceValues = try? rootURL.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
+              let availableSpace = resourceValues.volumeAvailableCapacityForImportantUsage else {
+            // Can't determine space, attempt anyway
+            return
+        }
+
+        // Estimate output file size
+        let estimatedSize = estimateFileSize(for: image, format: format)
+        let safetyMargin: Int64 = 5_000_000  // 5MB margin
+
+        guard availableSpace >= estimatedSize + safetyMargin else {
+            throw ExportError.insufficientDiskSpace(
+                required: estimatedSize,
+                available: availableSpace
+            )
+        }
+    }
+
+    private func estimateFileSize(for image: NSImage, format: ExportFormat) -> Int64 {
+        let dimensions = image.size.width * image.size.height
+        let components: CGFloat = format == .png ? 4 : 3  // RGBA vs RGB
+
+        // Quality factor for JPEG
+        let quality: CGFloat
+        if format == .jpeg {
+            quality = ExportOptions().jpegQuality
+        } else {
+            quality = 1.0
+        }
+
+        // Rough estimate: width * height * components * quality
+        let uncompressed = dimensions * components
+        let estimated = format == .png ? uncompressed : uncompressed * quality * 0.15
+
+        return Int64(estimated)
+    }
 
     // MARK: - Export
 
@@ -54,6 +167,16 @@ final class ExportManager: ObservableObject {
         }
 
         do {
+            exportProgress = 0.1
+
+            if let url = options.outputPath {
+                // Validate output location
+                try await validateOutputLocation(url)
+
+                // Validate disk space
+                try await validateDiskSpace(for: image, format: options.format)
+            }
+
             exportProgress = 0.2
             let cropped = cropper.crop(image)
 

@@ -8,22 +8,30 @@ import CoreGraphics
 enum WindowCapture {
     /// Capture a specific window by its window ID
     @available(macOS 15.0, *)
-    static func capture(windowID: CGWindowID) async throws -> CaptureResult {
-        // Get window information to find bounds
+    static func capture(windowID: CGWindowID, configuration: CaptureConfiguration = .default) async throws -> CaptureResult {
+        // Atomic check: verify window still exists AND is captureable
         guard let windowList = CGWindowListCopyWindowInfo(
             [.optionIncludingWindow],
             windowID
         ) as? [[String: Any]],
               let windowInfo = windowList.first,
-              let boundsDict = windowInfo[kCGWindowBounds as String] as? [String: Any] else {
+              let boundsDict = windowInfo[kCGWindowBounds as String] as? [String: Any],
+              let bounds = CGRect(dictionary: boundsDict) as CGRect?,
+              let layer = windowInfo[kCGWindowLayer as String] as? Int,
+              let alpha = windowInfo[kCGWindowAlpha as String] as? Double,
+              alpha > 0,  // Visible
+              layer >= 0     // On-screen
+        else {
             throw CaptureError.windowNotFound
         }
 
-        // Parse window bounds from dictionary
-        let bounds = CGRect(dictionary: boundsDict)
+        // Additional check: window on screen
+        guard isWindowOnScreen(bounds) else {
+            throw CaptureError.windowOffScreen
+        }
 
         // Capture using ScreenCaptureKit
-        let cgImage = try await ScreenCaptureHelper.captureWindow(windowID: windowID, bounds: bounds)
+        let cgImage = try await ScreenCaptureHelper.captureWindow(windowID: windowID, bounds: bounds, configuration: configuration)
         let image = NSImage(cgImage: cgImage, size: bounds.size)
 
         let metadata = CaptureMetadata(
@@ -38,6 +46,13 @@ enum WindowCapture {
             mode: .window(windowID: windowID),
             metadata: metadata
         )
+    }
+
+    /// Check if window bounds intersect any screen
+    private static func isWindowOnScreen(_ bounds: CGRect) -> Bool {
+        NSScreen.screens.contains { screen in
+            screen.frame.intersects(bounds)
+        }
     }
 
     /// Get list of visible windows for selection

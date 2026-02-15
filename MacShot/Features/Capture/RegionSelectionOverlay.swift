@@ -1,7 +1,7 @@
 // RegionSelectionOverlay.swift - UI for selecting screen region
 // Part of Phase 02 - Capture Engine
 
-import AppKit
+@preconcurrency import AppKit
 
 /// Overlay window for selecting a screen region
 final class RegionSelectionOverlay: NSWindow {
@@ -9,6 +9,9 @@ final class RegionSelectionOverlay: NSWindow {
     private var selectionEnd: CGPoint = .zero
     private var selectionRect: CGRect = .zero
     private var onSelectionComplete: ((CGRect) -> Void)?
+    private var displayConfigurationObserver: NSObjectProtocol?
+    private var currentDisplayConfiguration: String = UUID().uuidString
+    private var isValidConfiguration = true
 
     /// Create overlay covering all screens
     convenience init(onSelectionComplete: @escaping (CGRect) -> Void) {
@@ -49,6 +52,31 @@ final class RegionSelectionOverlay: NSWindow {
         // Create custom draw view for overlay
         let drawView = SelectionDrawView(frame: frame)
         contentView = drawView
+
+        // Register for display changes
+        displayConfigurationObserver = NotificationCenter.default.addObserver(
+            forName: NSApplication.didChangeScreenParametersNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            // Invalidate current selection
+            self?.currentDisplayConfiguration = UUID().uuidString
+            self?.isValidConfiguration = false
+            self?.showDisplayChangedWarning()
+        }
+    }
+
+    private func showDisplayChangedWarning() {
+        // Close the overlay as display configuration changed
+        close()
+        // TODO: Show user notification about display configuration change
+    }
+
+    /// Clean up observer
+    deinit {
+        if let observer = displayConfigurationObserver {
+            NotificationCenter.default.removeObserver(observer)
+        }
     }
 
     override var canBecomeKey: Bool { false }

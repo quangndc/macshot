@@ -4,7 +4,7 @@
 
 import Foundation
 import SwiftUI  // For @MainActor
-import Carbon  // For cmdKey, shiftKey constants
+import ApplicationServices  // For CGEventFlags
 
 // MARK: - Property Wrapper
 // @propertyWrapper lets us create custom storage behavior
@@ -55,7 +55,7 @@ final class SettingsStore {
     @AppStorageDefault(key: "hotkeys.fullscreen", defaultValue: Hotkey(
         id: 1,
         keyCode: 0x0F,
-        modifiers: UInt32(cmdKey | shiftKey),
+        flags: [.maskCommand, .maskShift],
         description: "Cmd+Shift+5"
     ))
     static var captureFullscreenHotkey: Hotkey
@@ -63,7 +63,7 @@ final class SettingsStore {
     @AppStorageDefault(key: "hotkeys.region", defaultValue: Hotkey(
         id: 2,
         keyCode: 0x10,
-        modifiers: UInt32(cmdKey | shiftKey),
+        flags: [.maskCommand, .maskShift],
         description: "Cmd+Shift+6"
     ))
     static var captureRegionHotkey: Hotkey
@@ -71,7 +71,7 @@ final class SettingsStore {
     @AppStorageDefault(key: "hotkeys.window", defaultValue: Hotkey(
         id: 3,
         keyCode: 0x11,
-        modifiers: UInt32(cmdKey | shiftKey),
+        flags: [.maskCommand, .maskShift],
         description: "Cmd+Shift+7"
     ))
     static var captureWindowHotkey: Hotkey

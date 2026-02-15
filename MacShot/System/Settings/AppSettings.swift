@@ -4,7 +4,7 @@
 
 import SwiftUI
 import Foundation
-import Carbon  // For cmdKey, shiftKey constants
+import ApplicationServices  // For CGEventFlags
 
 // @OBSERVABLE - Makes this class work with SwiftUI
 // When properties change, any view using this updates automatically
@@ -96,19 +96,19 @@ final class AppSettings: Equatable {
         captureFullscreenHotkey: Hotkey = Hotkey(
             id: 1,
             keyCode: 0x0F,
-            modifiers: UInt32(cmdKey | shiftKey),
+            flags: [.maskCommand, .maskShift],
             description: "Cmd+Shift+5"
         ),
         captureRegionHotkey: Hotkey = Hotkey(
             id: 2,
             keyCode: 0x10,
-            modifiers: UInt32(cmdKey | shiftKey),
+            flags: [.maskCommand, .maskShift],
             description: "Cmd+Shift+6"
         ),
         captureWindowHotkey: Hotkey = Hotkey(
             id: 3,
             keyCode: 0x11,
-            modifiers: UInt32(cmdKey | shiftKey),
+            flags: [.maskCommand, .maskShift],
             description: "Cmd+Shift+7"
         ),
         defaultFormat: ExportFormat = .png,

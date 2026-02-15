@@ -16,38 +16,40 @@ enum ShapeFactory {
         style: ShapeStyle,
         toolManager: ToolManager
     ) -> (any Shape)? {
+        let shape: (any Shape)?
+
         switch tool {
         case .select:
             return nil // Selection tool doesn't create shapes
 
         case .rectangle:
-            return RectangleShape(
+            shape = RectangleShape(
                 rect: rectFromPoints(startPoint, endPoint),
                 style: style
             )
 
         case .ellipse:
-            return EllipseShape(
+            shape = EllipseShape(
                 rect: rectFromPoints(startPoint, endPoint),
                 style: style
             )
 
         case .arrow:
-            return ArrowShape(
+            shape = ArrowShape(
                 startPoint: startPoint,
                 endPoint: endPoint,
                 style: style
             )
 
         case .line:
-            return LineShape(
+            shape = LineShape(
                 startPoint: startPoint,
                 endPoint: endPoint,
                 style: style
             )
 
         case .text:
-            return TextShape.medium(
+            return createText(
                 at: startPoint,
                 text: toolManager.currentText,
                 color: style.strokeColor
@@ -69,6 +71,13 @@ enum ShapeFactory {
                 dimOpacity: 0.7
             )
         }
+
+        // Validate before returning
+        guard let validShape = shape, validShape.isValid() else {
+            return nil
+        }
+
+        return validShape.normalize()
     }
 
     /// Create shape with specific parameters
@@ -132,7 +141,15 @@ enum ShapeFactory {
         case .bold: font = .boldSystemFont(ofSize: 18)
         }
 
-        return TextShape(position: point, text: text, font: font, color: color)
+        var shape = TextShape(position: point, text: text, font: font, color: color)
+
+        // Validate and normalize
+        guard shape.isValid() else {
+            // Return empty placeholder for invalid text
+            return TextShape(position: point, text: "", font: font, color: color)
+        }
+
+        return shape.normalize()
     }
 
     static func createNumber(

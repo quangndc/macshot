@@ -22,7 +22,7 @@ graph TB
     subgraph System Layer
         H[CoreGraphics] --> I[Screen Capture]
         H --> J[Window Management]
-        K[Carbon] --> L[Global Hotkeys]
+        H --> K[CGEventTap] --> L[Global Hotkeys]
     end
 
     subgraph Platform Layer
@@ -44,12 +44,14 @@ graph TB
 ### 1. Core Layer
 
 #### CaptureEngine
-**Purpose**: Central coordinator for all capture operations
+**Purpose**: Central coordinator for all capture operations with enhanced error handling (v0.9.1)
 **Responsibilities**:
 - Coordinate between different capture modes
 - Manage capture state and lifecycle
 - Handle error scenarios and recovery
 - Publish updates to UI components
+- Validate capture operations before execution
+- Implement retry logic for transient failures
 
 **Key Features**:
 ```swift
@@ -59,15 +61,25 @@ final class CaptureEngine: ObservableObject {
     @Published var capturedImage: NSImage?
     @Published var isCapturing = false
 
-    // Core operations
+    // Core operations with enhanced error handling
     func capture(mode: CaptureMode) async throws -> CaptureResult
     func captureFullscreen() async throws -> CaptureResult
     func captureRegion() async throws -> CaptureResult
     func captureWindow(windowID: CGWindowID) async throws -> CaptureResult
+
+    // Enhanced error handling (v0.9.1)
+    private func validateCaptureMode(_ mode: CaptureMode) throws
+    private func handleCaptureError(_ error: Error) -> CaptureError
+    private func retryCapture(_ operation: @escaping () async throws -> CaptureResult, maxAttempts: Int) async throws -> CaptureResult
 }
 ```
 
 **Design Pattern**: Observer pattern for UI updates, Coordinator pattern for operation management
+**Edge Case Fixes (v0.9.1)**:
+- Capture mode validation before execution
+- Error handling with proper error types
+- Retry logic for transient failures
+- Enhanced state management during capture operations
 
 #### AppSettings
 **Purpose**: Centralized user preferences model (Phase 08)
@@ -137,12 +149,14 @@ final class SettingsStore {
 **Design Pattern**: Property wrapper pattern, Factory pattern for defaults
 
 #### FileManager
-**Purpose**: Handle all file-related operations
+**Purpose**: Handle all file-related operations with comprehensive edge case handling (v0.9.1)
 **Responsibilities**:
-- Save screenshots to specified locations
+- Save screenshots to specified locations with robust error handling
 - Manage filename generation and validation
 - Handle different image formats
 - Implement file cleanup and organization
+- Directory creation and permission validation
+- File collision detection and resolution
 
 **Key Features**:
 ```swift
@@ -152,12 +166,24 @@ class ScreenshotFileManager {
     var defaultFormat: ImageFormat = .png
     var includeTimestamp = true
 
-    // Operations
+    // Operations with enhanced error handling
     func saveScreenshot(_ image: NSImage, name: String?) throws -> URL
     func generateFilename(mode: CaptureMode) -> String
-    func cleanupOldFiles(maxAge: TimeInterval) throws
+
+    // Edge case handling (v0.9.1 enhancements)
+    private func ensureDirectoryExists() throws
+    private func validateFileAccess(_ url: URL) throws
+    private func handleFileCollision(url: URL, strategy: FileCollisionStrategy) throws -> URL
+    private func checkDiskSpace(requiredBytes: Int64) throws
 }
 ```
+**Edge Case Fixes (v0.9.1)**:
+- Directory existence validation before operations
+- File permission checking for write access
+- File collision detection and user-configurable resolution strategies
+- Retry mechanisms for transient failures
+- Proper resource cleanup and temporary file management
+- Disk space checking before large file operations
 
 ### 2. Capture Engine Layer
 
@@ -215,6 +241,38 @@ final class WindowCapture {
     // Window detection, cropping, effects
 }
 ```
+
+#### Export Manager (Enhanced - v0.9.1)
+**Purpose**: Multiple format export functionality with improved error handling
+**Responsibilities**:
+- Handle PNG/JPEG exports with quality settings
+- Validate export options before execution
+- Check disk space availability
+- Provide completion callbacks for async operations
+- Handle export errors gracefully
+
+**Key Features**:
+```swift
+class ExportManager {
+    // Export options with enhanced validation
+    func export(image: NSImage, options: ExportOptions) async throws -> URL
+
+    // Validation methods
+    private func validateExportOptions(_ options: ExportOptions) throws
+    private func checkDiskSpace(requiredBytes: Int64) throws
+    private func handleExportError(_ error: Error) throws
+
+    // Completion callbacks
+    var onExportComplete: ((URL) -> Void)?
+    var onExportError: ((Error) -> Void)?
+}
+```
+**Edge Case Fixes (v0.9.1)**:
+- Export options validation before execution
+- Disk space checking before large file operations
+- Proper error handling and user feedback
+- Completion callbacks for async operations
+- Retry mechanisms for transient export failures
 
 ### 3. UI Layer
 
@@ -280,25 +338,76 @@ struct EditorView: View {
 ### 4. System Integration Layer
 
 #### HotkeyManager
-**Purpose**: Global hotkey management
-**Implementation**: Carbon API integration (planned), UI components complete
+**Purpose**: Global hotkey management using modern CGEventTap implementation (v0.9.2)
+**Implementation**: CGEventTap with Swift-C interop, fully implemented and tested
 **Features**:
-- Register global hotkeys (Carbon API pending)
-- Handle key combinations
-- Event processing
-- Conflict resolution
-- Hotkey recording UI (HotkeyRecorder.swift - complete)
+- **NEW**: Global hotkey registration using CGEventTap (replaces deprecated Carbon API)
+- Thread-safe event processing with @MainActor dispatch
+- **NEW**: Accessibility permission handling with automatic system settings prompt
+- **NEW**: Hotkey recording UI (HotkeyRecorder.swift - complete)
+- **NEW**: Resource cleanup and proper memory management
+- **NEW**: Complete modifier flag mapping (Carbon to CGEvent modifier constants)
+- **NEW**: Swift-C interop for efficient event processing
+- **NEW**: Proper memory management with automatic resource cleanup
 
-**Status**: UI components complete (Phase 08), Carbon API integration pending
+**Status**: ✅ COMPLETED - CGEventTap implementation fully functional (2026-02-15)
+
+**Edge Case Fixes (v0.9.2)**:
+- Replaced deprecated Carbon API with modern CGEventTap
+- Proper Swift-C interop for event handling
+- Thread-safe event processing with @MainActor dispatch
+- Accessibility permission handling with system settings integration
+- Resource cleanup and proper memory management
+- Complete modifier flag mapping from Carbon to CGEvent constants
+
+**Implementation Details**:
+```swift
+class HotkeyManager {
+    // Event tap management
+    private var tap: CFMachPort?
+    private var runLoopSource: CFRunLoopSource?
+
+    // Thread-safe hotkey access
+    nonisolated(unsafe) private static var currentHotkey: Hotkey?
+
+    // Modern CGEventTap implementation
+    func register(_ hotkey: Hotkey, handler: @escaping () -> Void) throws
+    func unregister()
+    func checkAccessibilityPermission() -> Bool
+    func openAccessibilitySettings()
+}
+
+// Swift-C interop for event callback
+@_silgen_name("HotkeyCallback")
+func HotkeyCallback(
+    proxy: CGEventTapProxy,
+    eventType: CGEventType,
+    event: CGEvent
+) -> Unmanaged<CGEvent>?
+```
 
 ```swift
 class HotkeyManager {
-    private var registeredHotkeys: [String: CGEventRef] = [:]
+    // Event tap management
+    private var tap: CFMachPort?
+    private var runLoopSource: CFRunLoopSource?
+
+    // Thread-safe hotkey access
+    nonisolated(unsafe) private static var currentHotkey: Hotkey?
 
     func register(_ hotkey: Hotkey, handler: @escaping () -> Void) throws
-    func unregister(_ hotkey: Hotkey)
-    func isAvailable(_ hotkey: Hotkey) -> Bool
+    func unregister()
+    func checkAccessibilityPermission() -> Bool
+    func openAccessibilitySettings()
 }
+
+// Event callback with Swift-C interop
+@_silgen_name("HotkeyCallback")
+func HotkeyCallback(
+    proxy: CGEventTapProxy,
+    eventType: CGEventType,
+    event: CGEvent
+) -> Unmanaged<CGEvent>?
 ```
 
 #### PermissionHandler
@@ -363,13 +472,17 @@ sequenceDiagram
 ### 3. Hotkey Flow
 ```mermaid
 sequenceDiagram
-    participant C as Carbon API
+    participant CG as CGEventTap
     participant H as HotkeyManager
+    participant L as Swift-C Callback
+    participant M as @MainActor
     participant E as CaptureEngine
     participant UI as UI Update
 
-    C->>H: Global key event
-    H->>E: Trigger capture
+    CG->>L: System key event
+    L->>H: Event processing
+    H->>M: Dispatch to main actor
+    M->>E: Trigger capture
     E->>E: Capture operation
     E->>UI: Update UI
 ```
@@ -411,6 +524,9 @@ enum CaptureError: Error, LocalizedError {
     case invalidRegion
     case windowNotFound
     case fileSaveFailed(Error)
+    case directoryCreationFailed
+    case fileCollisionDetected
+    case exportFailed(Error)
 
     var errorDescription: String?
 }
@@ -424,8 +540,11 @@ enum CaptureError: Error, LocalizedError {
 
 ### 3. Recovery Patterns
 - **Permission Denied**: Open system settings
-- **File Save Failed**: Alternative locations
+- **File Save Failed**: Alternative locations, retry mechanisms
 - **Capture Failed**: Retry or fallback to simpler mode
+- **Directory Creation Failed**: Automatic retry with different locations
+- **File Collision**: User-configurable resolution strategies
+- **Export Failed**: Alternative formats, disk space cleanup, retry logic
 
 ## Performance Architecture
 
@@ -447,7 +566,64 @@ enum CaptureError: Error, LocalizedError {
 - **Background Processing**: Offload heavy operations
 - **Hardware Acceleration**: Use GPU where appropriate
 
-## Security Architecture
+### 4. CGEventTap Hotkey Architecture
+
+#### Implementation Overview
+
+The hotkey system uses Core Graphics Event Taps (CGEventTap) instead of the deprecated Carbon API. This modern approach provides better performance and integration with modern macOS security models.
+
+#### Key Components
+
+**Event Tap Creation**
+```swift
+// Create event tap for key down events
+let eventMask: CGEventMask = (1 << CGEventType.keyDown.rawValue)
+tap = CGEvent.tapCreate(
+    tap: .cghidEventTap,
+    place: .headInsertEventTap,
+    options: .defaultTap,
+    eventsOfInterest: eventMask,
+    callback: HotkeyCallback,
+    userInfo: nil
+)
+```
+
+**Swift-C Interop Layer**
+```swift
+// C-compatible callback function for event processing
+@_silgen_name("HotkeyCallback")
+func HotkeyCallback(
+    proxy: CGEventTapProxy,
+    eventType: CGEventType,
+    event: CGEvent
+) -> Unmanaged<CGEvent>? {
+    // Process key events and trigger captures
+    return HotkeyManager.processEvent(event: event)
+}
+```
+
+**Thread Safety Implementation**
+```swift
+// Non-isolated global hotkey for callback access
+nonisolated(unsafe) private static var currentHotkey: Hotkey?
+
+// Thread-safe dispatch to MainActor
+func handleHotkeyTrigger() {
+    Task { @MainActor [weak self] in
+        self?.triggerCapture()
+    }
+}
+```
+
+#### Event Flow Architecture
+
+1. **System Event Detection**: CGEventTap monitors all key events
+2. **Hotkey Matching**: Compare event with registered hotkey combination
+3. **Permission Check**: Verify Accessibility permission is granted
+4. **Thread Dispatch**: Safely transition to MainActor for UI updates
+5. **Capture Trigger**: Execute capture operation through CaptureEngine
+
+#### Security Architecture
 
 ### 1. Permission Model
 - **Principle of Least Privilege**: Only request necessary permissions
@@ -585,6 +761,13 @@ Tests/
 - **UI Tests**: End-to-end user workflow validation
 - **Performance Tests**: Benchmark and optimization
 - **Memory Tests**: Leak prevention and optimization
+
+**Testing Improvements (v0.9.1)**:
+- **NEW**: Semaphore-based async testing in measure blocks
+- **NEW**: Fixed invalid weak self on enum types
+- **NEW**: Corrected UInt32 type casts
+- **NEW**: Proper availability checks for SMAppService
+- **NEW**: Simplified export validation logic
 
 **Automation**:
 - XCTest framework for all test types
@@ -851,5 +1034,5 @@ func measureCapturePerformance() {
 ---
 
 *Last Updated: 2026-02-15*
-*Architecture Version: 1.5.0*
-*Phase 09: Testing Complete, Bug fixes applied (v0.9.1)*
+*Architecture Version: 1.7.0*
+*Edge Case Fixes Complete (v0.9.1 - v0.9.2)*

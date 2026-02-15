@@ -26,7 +26,7 @@ struct ExportButton: View {
 
             // Export button
             Button {
-                viewModel.showExportPanel = true
+                handleExport()
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "square.and.arrow.down")
@@ -43,14 +43,14 @@ struct ExportButton: View {
             .buttonStyle(.plain)
             .help("Export Options (Cmd+S)")
         }
-        .sheet(isPresented: $viewModel.showExportPanel) {
-            ExportPanel(
-                viewModel: viewModel,
-                cropper: viewModel.imageCropper,
-                exportManager: viewModel.getExportManager()
-            )
-        }
         .keyboardShortcut("s", modifiers: .command)
+    }
+
+    // MARK: - Export Handling
+
+    private func handleExport() {
+        // Export is always available
+        viewModel.showExportPanel = true
     }
 }
 

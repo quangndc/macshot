@@ -13,9 +13,54 @@ struct RectangleShape: Shape {
     var style: ShapeStyle
     var isSelected = false
 
+    // MARK: - Constants
+
+    private static let minSize: CGFloat = 5.0
+
     // MARK: - Computed Properties
 
     var bounds: CGRect { rect }
+
+    // MARK: - Validation
+
+    func isValid() -> Bool {
+        // Check minimum size
+        guard rect.width >= Self.minSize, rect.height >= Self.minSize else {
+            return false
+        }
+
+        return true
+    }
+
+    func normalize() -> RectangleShape {
+        RectangleShape(
+            rect: rect,
+            style: style,
+            isSelected: isSelected
+        )
+    }
+
+    func enforceMinimumSize() -> RectangleShape {
+        let minDim = Self.minSize
+        let currentFrame = rect
+
+        let newWidth = max(minDim, currentFrame.width)
+        let newHeight = max(minDim, currentFrame.height)
+        let newFrame = CGRect(
+            x: currentFrame.minX,
+            y: currentFrame.minY,
+            width: newWidth,
+            height: newHeight
+        )
+
+        return withFrame(newFrame)
+    }
+
+    func withFrame(_ newFrame: CGRect) -> RectangleShape {
+        var copy = self
+        copy.rect = newFrame
+        return copy
+    }
 
     // MARK: - Shape Protocol Implementation
 

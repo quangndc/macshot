@@ -15,6 +15,11 @@ struct TextShape: Shape {
     var color: Color
     var isSelected = false
 
+    // MARK: - Constants
+
+    private static let maxTextLength = 1000
+    private static let minTextLength = 1
+
     // MARK: - Convenience Initializers
 
     init(position: CGPoint, text: String, font: NSFont = .systemFont(ofSize: 18), color: Color = .red) {
@@ -22,6 +27,65 @@ struct TextShape: Shape {
         self.text = text
         self.font = font
         self.color = color
+    }
+
+    // MARK: - Validation
+
+    func isValid() -> Bool {
+        // Check text length
+        guard text.count >= Self.minTextLength else { return false }
+        guard text.count <= Self.maxTextLength else { return false }
+
+        // Check frame validity
+        let frame = bounds
+        guard !frame.isEmpty else { return false }
+        guard !frame.isInfinite else { return false }
+
+        // Text should contain visible characters
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+
+        return true
+    }
+
+    func normalize() -> TextShape {
+        var sanitized = self
+
+        // Trim whitespace
+        var trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Limit length
+        if trimmed.count > Self.maxTextLength {
+            let index = trimmed.index(trimmed.startIndex, offsetBy: Self.maxTextLength)
+            trimmed = String(trimmed[..<index])
+        }
+
+        // Remove control characters (except tabs and newlines)
+        trimmed = String(trimmed.compactMap { char -> Character? in
+            // Check if character is a control character (ASCII 0-31, except 9=tab, 10=newline, 13=carriage return)
+            let scalars = char.unicodeScalars
+            guard let scalar = scalars.first else { return char }
+            if scalar.value < 32 && scalar.value != 9 && scalar.value != 10 && scalar.value != 13 {
+                return nil
+            }
+            return char
+        })
+
+        sanitized.text = trimmed
+        return sanitized
+    }
+
+    func enforceMinimumSize() -> TextShape {
+        // Text size is determined by content, not manually set
+        // Just validate it's renderable
+        return self
+    }
+
+    func withFrame(_ newFrame: CGRect) -> TextShape {
+        // For text, frame is derived from content, so we adjust position instead
+        var copy = self
+        copy.position = CGPoint(x: newFrame.origin.x, y: newFrame.maxY)
+        return copy
     }
 
     // MARK: - Computed Properties

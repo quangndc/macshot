@@ -38,16 +38,23 @@ To create the most efficient and user-friendly screenshot tool for macOS, levera
 - Must include cursor in screenshots (configurable)
 
 #### FR-02: Global Hotkey System
-- Must register global hotkeys via Carbon API
+- Must register global hotkeys via modern CGEventTap API (v0.9.2)
 - Must support custom key combinations
 - Must capture hotkey events from any application
 - Must handle hotkey conflicts gracefully
+- **NEW**: Must provide accessibility permission management
+- **NEW**: Must use Swift-C interop for efficient event processing
+- **NEW**: Must support proper resource cleanup and memory management
 
 #### FR-03: File Management
 - Must save screenshots in user-specified directory
 - Must generate timestamp-based filenames
 - Must support PNG, JPG formats
 - Must handle file permissions correctly
+- **NEW**: Must provide directory validation and creation
+- **NEW**: Must implement file collision detection and resolution
+- **NEW**: Must include retry mechanisms for transient failures
+- **NEW**: Must provide proper resource cleanup and temporary file management
 
 #### FR-04: User Interface
 - Must provide menu bar icon with dropdown menu
@@ -171,12 +178,14 @@ MacShot/
 - ✅ Export quality settings
 - ✅ Image cropping functionality
 
-### Phase 4: Hotkey System (Partially Complete)
-- 🟡 Global hotkey registration (Carbon API - pending)
+### Phase 4: Hotkey System (Completed - v0.9.2)
+- ✅ Global hotkey registration via CGEventTap (v0.9.2)
 - ✅ Hotkey configuration UI (Phase 08)
-- 🟡 Event handling (pending)
+- ✅ Event handling with Swift-C interop (v0.9.2)
 - ✅ HotkeyRecorder component
 - ✅ Hotkey persistence (Phase 08)
+- ✅ Accessibility permission management (v0.9.2)
+- ✅ Resource cleanup and memory management (v0.9.2)
 
 ### Phase 5: User Interface (Completed)
 - ✅ Menu bar implementation (MenuBarView)
@@ -202,14 +211,17 @@ MacShot/
 ### Phase 9: Testing & QA (Completed)
 - ✅ Comprehensive test suite
 - ✅ Performance benchmarks
-- ✅ Bug fixes and improvements (v0.9.1)
+- ✅ Edge case fixes and improvements (v0.9.1 - v0.9.2)
 - ✅ CI/CD integration
+- ✅ Enhanced async testing with semaphores (v0.9.1)
+- ✅ Fixed memory leak and type cast issues (v0.9.1)
 
-### Phase 10: Documentation (In Progress)
-- 🔄 Documentation update
-- 🔄 User guide finalization
-- ⏳ App Store preparation
-- ⏳ Code signing and notarization
+### Phase 10: Documentation (Completed)
+- ✅ Technical documentation update (v0.9.1 - v0.9.2)
+- ✅ User guide finalization
+- ✅ App Store preparation documentation
+- ✅ Code signing and notarization guidelines
+- ✅ Edge case fixes documentation complete
 
 ## Success Metrics
 
@@ -300,9 +312,18 @@ MacShot/
 - **Equatable**: Settings change tracking for reactive updates
 - **Version Migration**: Settings upgrade system for backward compatibility
 - **Semaphore-based Async Testing**: Proper async/await testing patterns (v0.9.1)
+- **CGEventTap**: Modern hotkey system replacing Carbon API (v0.9.2)
+- **Enhanced Error Handling**: Comprehensive edge case handling and recovery patterns (v0.9.1)
+- **Resource Management**: Proper cleanup and memory management for hotkeys and files
+
+### Recent Enhancements (v0.9.1 - v0.9.2)
+- **Edge Case Handling**: Comprehensive file management improvements
+- **Hotkey System**: Modern CGEventTap implementation with Swift-C interop
+- **Error Recovery**: Robust error handling and recovery mechanisms
+- **Testing**: Enhanced async testing patterns and memory leak prevention
 
 ---
 *Last Updated: 2026-02-15*
-*Version: 1.2.0*
-*Current Project Version: 0.9.1*
-*Phase 09: Testing Complete, Phase 10: Documentation Update In Progress*
+*Version: 1.3.0*
+*Current Project Version: 0.9.2*
+*All Major Features Complete - Documentation Updated*

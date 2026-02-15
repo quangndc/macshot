@@ -2,37 +2,60 @@
 // This file manages global hotkeys (keyboard shortcuts that work anywhere)
 // Uses CGEventTap for modern macOS event monitoring
 
-import ApplicationServices  // For CGEventTap and accessibility handling
+import ApplicationServices
 
 // Global storage for current hotkey info (accessible from callback)
-// Think of it like a "bulletin board" that callback can read
-private nonisolated(unsafe) var currentHotkey: (keyCode: UInt32, modifiers: UInt32, handler: @MainActor () -> Void)?
+// Store only keyCode and modifiers (no main actor closure)
+private nonisolated(unsafe) var currentHotkeyTuple: (keyCode: UInt32, modifiers: UInt32)?
+
+// Global reference to HotkeyManager for callback access
+private nonisolated(unsafe) var sharedHotkeyManager: HotkeyManager?
+
+// HOTKEY ERROR - Errors that can occur during hotkey registration
+enum HotkeyError: Error, LocalizedError {
+    case permissionDenied
+    case registrationFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .permissionDenied:
+            return "Accessibility permission not granted"
+        case .registrationFailed:
+            return "Failed to register hotkey"
+        }
+    }
+}
 
 // @MainActor means this runs on the main thread for safety
 @MainActor
 final class HotkeyManager: ObservableObject {
 
     // eventTap is our "listening device" for keyboard events
-    // Think of it like having a microphone that hears keyboard presses
     private var eventTap: CFMachPort?
 
     // runLoopSource integrates the tap with macOS's event processing
-    // Think of it like connecting our microphone to the sound system
     private var runLoopSource: CFRunLoopSource?
 
+    // Reconnection monitoring
+    private var reconnectTimer: Timer?
+
+    // Rate limiting
+    private var lastTriggerTime: Date?
+    private let minimumInterval: TimeInterval = 0.5
+
+    // Current hotkey info for reconnection
+    private var currentHotkeyInfo: Hotkey?
+
     // captureHandler is what happens when hotkey is pressed
-    // Think of it like "what channel does the remote switch to"
     private let captureHandler: @MainActor () -> Void
 
     // INITIALIZER - Sets up the hotkey manager
-    // Note: Caller should call register() with desired hotkey
     init(captureHandler: @escaping @MainActor () -> Void) {
         self.captureHandler = captureHandler
+        sharedHotkeyManager = self
     }
 
     // REGISTER FROM SETTINGS - Load from SettingsStore and register
-    /// Convenience method to register hotkey from stored preferences
-    /// Think of it like "use your saved preference"
     func registerFromSettings() -> Bool {
         let storedHotkey = Hotkey(
             id: 1,
@@ -44,34 +67,50 @@ final class HotkeyManager: ObservableObject {
     }
 
     // REGISTER - Tells macOS "hey, I want this keyboard shortcut"
-    // Returns true if successful, false if failed
     func register(hotkey: Hotkey) -> Bool {
-        // First, unregister any existing hotkey (cancel old reservation)
         unregister()
+        currentHotkeyInfo = hotkey
 
-        // Check Accessibility permission (required for CGEventTap)
-        // Think of it like checking if we have a license to listen
         guard AXIsProcessTrusted() else {
             print("Accessibility permission not granted. Please enable in System Settings > Privacy & Security > Accessibility")
-            // Prompt user to grant permission (use literal string value)
             let options: [String: Bool] = ["AXTrustedCheckOptionPrompt": true]
             _ = AXIsProcessTrustedWithOptions(options as CFDictionary)
             return false
         }
 
+        do {
+            try registerWithRetry(hotkey, attempts: 3)
+            print("Hotkey registered: \(hotkey.description)")
+            return true
+        } catch {
+            print("Failed to register hotkey after retries: \(error)")
+            return false
+        }
+    }
+
+    // REGISTER WITH RETRY - Attempt registration multiple times
+    private func registerWithRetry(_ hotkey: Hotkey, attempts: Int) throws {
+        for attempt in 0..<attempts {
+            do {
+                try registerEventTap(hotkey)
+                return
+            } catch {
+                if attempt == attempts - 1 {
+                    throw error
+                }
+                Thread.sleep(forTimeInterval: 0.1 * Double(attempt + 1))
+            }
+        }
+    }
+
+    // REGISTER EVENT TAP - Create and configure event tap
+    private func registerEventTap(_ hotkey: Hotkey) throws {
         // Store hotkey info in global variable for callback access
-        // Think of it like posting our "cheat sheet" on the bulletin board
-        currentHotkey = (
+        currentHotkeyTuple = (
             keyCode: hotkey.keyCode,
-            modifiers: hotkey.modifiers,
-            handler: captureHandler
+            modifiers: hotkey.modifiers
         )
 
-        // Create event tap for keydown events
-        // CGEvent.tapCreate creates a "listener" for keyboard events
-        // .cgSessionEventTap: Listen to all events in the current session
-        // .headInsertEventTap: Insert at the front of the event tap chain
-        // .defaultTap: Default behavior (no special options)
         let eventMask = (1 << CGEventType.keyDown.rawValue)
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -81,118 +120,139 @@ final class HotkeyManager: ObservableObject {
             callback: eventTapCallback,
             userInfo: nil
         ) else {
-            print("Failed to create event tap - may need Accessibility permission")
-            currentHotkey = nil
-            return false
+            throw HotkeyError.registrationFailed
         }
 
-        // Save the tap reference
         eventTap = tap
-
-        // Create and add run loop source
-        // Think of it like plugging our listener into macOS's event processing
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         self.runLoopSource = runLoopSource
-
-        // Enable the tap (start listening)
         CGEvent.tapEnable(tap: tap, enable: true)
-
-        print("Hotkey registered: \(hotkey.description)")
-        return true
+        startHealthMonitoring()
     }
 
-    // UNREGISTER - Cancels our hotkey reservation
-    // Think of it like unplugging the microphone
-    func unregister() {
-        // Disable the tap first
+    // START HEALTH MONITORING
+    private func startHealthMonitoring() {
+        reconnectTimer?.invalidate()
+        reconnectTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            if !self.isTapHealthy() {
+                print("Event tap unhealthy, attempting reconnect")
+                self.reconnect()
+            }
+        }
+    }
+
+    // IS TAP HEALTHY
+    private func isTapHealthy() -> Bool {
+        guard let tap = eventTap else { return false }
+        return CGEvent.tapIsEnabled(tap: tap)
+    }
+
+    // RECONNECT
+    @MainActor
+    private func reconnect() {
+        guard let hotkey = currentHotkeyInfo else { return }
+        unregister(keepHotkeyInfo: true)
+
+        Task { @MainActor in
+            do {
+                try registerWithRetry(hotkey, attempts: 3)
+                print("Event tap reconnected successfully")
+            } catch {
+                print("Event tap reconnection failed: \(error.localizedDescription)")
+                Task { @MainActor in
+                    try? await Task.sleep(for: .seconds(10))
+                    self.reconnect()
+                }
+            }
+        }
+    }
+
+    // HANDLE HOTKEY TRIGGER
+    func handleHotkeyTrigger() {
+        let now = Date()
+        if let last = lastTriggerTime,
+           now.timeIntervalSince(last) < minimumInterval {
+            return
+        }
+        lastTriggerTime = now
+        Task { @MainActor [weak self] in
+            self?.captureHandler()
+        }
+    }
+
+    // UNREGISTER
+    func unregister(keepHotkeyInfo: Bool = false) {
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
+
         if let tap = eventTap {
             CGEvent.tapEnable(tap: tap, enable: false)
-
-            // Remove from run loop (unplug from event processing)
             if let source = runLoopSource {
-                CFRunLoopRemoveSource(
-                    CFRunLoopGetCurrent(),
-                    source,
-                    .commonModes
-                )
+                CFRunLoopRemoveSource(CFRunLoopGetCurrent(), source, .commonModes)
             }
         }
 
-        // Clear all references (throw away the ticket and cheat sheet)
         eventTap = nil
         runLoopSource = nil
-        currentHotkey = nil
+        currentHotkeyTuple = nil
+
+        if !keepHotkeyInfo {
+            currentHotkeyInfo = nil
+        }
     }
 
-    // DEINIT - Cleanup when manager is destroyed
-    deinit {
-        // Direct cleanup for CF objects
-        currentHotkey = nil
+    // DEINIT
+    nonisolated deinit {
+        currentHotkeyTuple = nil
+        // Timer cleanup happens in unregister
     }
 }
 
-// EVENT TAP CALLBACK - Function called when keyboard event occurs
-// @convention(c) means this uses C calling convention (required by CGEventTap)
-// Think of it like "translate Swift function to C function"
+// EVENT TAP CALLBACK
 private let eventTapCallback: CGEventTapCallBack = {
     (proxy: CGEventTapProxy,
      type: CGEventType,
      event: CGEvent,
      refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? in
 
-    // Only handle keydown events (ignore keyup and others)
-    // Think of it like "only care when key is pressed down"
     guard type == .keyDown else {
         return Unmanaged.passUnretained(event)
     }
 
-    // Access current hotkey from global variable
-    // Think of it like "check the bulletin board for notes"
-    guard let hotkey = currentHotkey else {
+    guard let hotkey = currentHotkeyTuple else {
         return Unmanaged.passUnretained(event)
     }
 
-    // Get event data
-    // keyCode: which key was pressed
-    // flags: which modifier keys are held down
     let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
     let flags = event.flags
 
-    // Check if this event matches our hotkey
     if isHotkeyMatch(keyCode: keyCode, flags: flags, hotkey: hotkey) {
-        // Trigger capture on main thread
-        // Task { @MainActor in ... } switches to main thread safely
-        // Think of it like "hand off to the main thread for UI work"
-        Task { @MainActor in
-            hotkey.handler()
+        // Dispatch to main actor to handle the hotkey
+        DispatchQueue.main.async {
+            sharedHotkeyManager?.handleHotkeyTrigger()
         }
-        // Return nil to consume the event (don't pass it to other apps)
-        return nil
+        event.setIntegerValueField(.keyboardEventKeycode, value: 0)
+        return Unmanaged.passRetained(event)
     }
 
-    // Not our hotkey, pass event along
     return Unmanaged.passUnretained(event)
 }
 
-// IS HOTKEY MATCH - Check if event matches our hotkey
-// Think of it like "compare the pressed keys to our cheat sheet"
-private func isHotkeyMatch(
+// IS HOTKEY MATCH
+private nonisolated(unsafe) func isHotkeyMatch(
     keyCode: Int64,
     flags: CGEventFlags,
-    hotkey: (keyCode: UInt32, modifiers: UInt32, handler: @MainActor () -> Void)
+    hotkey: (keyCode: UInt32, modifiers: UInt32)
 ) -> Bool {
-    // Check key code first
     guard keyCode == Int64(hotkey.keyCode) else {
         return false
     }
 
-    // Convert stored modifiers to CGEventFlags for comparison
-    // CGEventFlags uses different bit positions than Carbon
     var targetFlags: CGEventFlags = []
     let modifiers = hotkey.modifiers
 
-    // Check each modifier flag and build CGEventFlags
     if modifiers & UInt32(CGEventFlags.maskCommand.rawValue) != 0 {
         targetFlags.insert(.maskCommand)
     }
@@ -206,29 +266,16 @@ private func isHotkeyMatch(
         targetFlags.insert(.maskSecondaryFn)
     }
 
-    // Compare flags (must match exactly)
     return flags == targetFlags
 }
 
 // HOTKEY - A simple data structure to describe a hotkey
-// Think of it like a recipe card: "press these buttons together"
 struct Hotkey: Codable, Equatable, Sendable {
-    // id: unique identifier for this hotkey
     var id: Int
-
-    // keyCode: which key on the keyboard
-    // Each key has a number (e.g., 59 = F5 on US keyboards)
     var keyCode: UInt32
-
-    // modifiers: which special keys are held down
-    // These store CGEventFlags raw values for compatibility
     var modifiers: UInt32
-
-    // description: human-readable text like "Cmd+Shift+5"
     var description: String
 
-    // Convert to CGEventFlags for comparison
-    // Think of it like "translate our stored number to actual flags"
     var cgEventFlags: CGEventFlags {
         var flags: CGEventFlags = []
         if modifiers & UInt32(CGEventFlags.maskCommand.rawValue) != 0 {
@@ -246,7 +293,6 @@ struct Hotkey: Codable, Equatable, Sendable {
         return flags
     }
 
-    // Create from CGEventFlags (convenience for UI recording)
     init(id: Int, keyCode: UInt32, flags: CGEventFlags, description: String) {
         self.id = id
         self.keyCode = keyCode
@@ -255,15 +301,39 @@ struct Hotkey: Codable, Equatable, Sendable {
     }
 }
 
-// DEFAULT HOTKEY - The hotkey MacShot uses by default
+// SYSTEM RESERVED HOTKEYS
 extension Hotkey {
-    // Default hotkey: Cmd+Shift+5
-    // 59 = F5 key on US keyboards
-    // maskCommand | maskShift = both Command and Shift must be held
+    static var systemReserved: [Hotkey] {
+        [
+            Hotkey(id: 100, keyCode: 0x0C, flags: .maskCommand, description: "Q+Cmd"),
+            Hotkey(id: 101, keyCode: 0x0D, flags: .maskCommand, description: "W+Cmd"),
+            Hotkey(id: 102, keyCode: 0x08, flags: .maskCommand, description: "C+Cmd"),
+            Hotkey(id: 103, keyCode: 0x09, flags: .maskCommand, description: "V+Cmd"),
+            Hotkey(id: 104, keyCode: 0x07, flags: .maskCommand, description: "X+Cmd"),
+            Hotkey(id: 105, keyCode: 0x06, flags: .maskCommand, description: "Z+Cmd"),
+            Hotkey(id: 106, keyCode: 0x00, flags: .maskCommand, description: "A+Cmd"),
+            Hotkey(id: 107, keyCode: 0x01, flags: .maskCommand, description: "S+Cmd"),
+            Hotkey(id: 108, keyCode: 0x23, flags: .maskCommand, description: "P+Cmd"),
+            Hotkey(id: 109, keyCode: 0x03, flags: .maskCommand, description: "F+Cmd"),
+            Hotkey(id: 110, keyCode: 0x31, flags: .maskCommand, description: "Space+Cmd"),
+            Hotkey(id: 111, keyCode: 0x30, flags: .maskCommand, description: "Tab+Cmd"),
+            Hotkey(id: 112, keyCode: 0x2E, flags: .maskCommand, description: "M+Cmd"),
+            Hotkey(id: 113, keyCode: 0x04, flags: .maskCommand, description: "H+Cmd"),
+            Hotkey(id: 114, keyCode: 0x35, flags: .maskCommand, description: "Esc+Cmd"),
+        ]
+    }
+
+    func isSystemReserved() -> Bool {
+        Self.systemReserved.contains(self)
+    }
+}
+
+// DEFAULT HOTKEY
+extension Hotkey {
     static let `default` = Hotkey(
         id: 1,
-        keyCode: 59,  // F5 key
+        keyCode: 59,
         flags: [.maskCommand, .maskShift],
-        description: "⌘⇧5"  // Visual representation
+        description: "⌘⇧5"
     )
 }
