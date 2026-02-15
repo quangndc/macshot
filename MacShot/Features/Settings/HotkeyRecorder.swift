@@ -2,7 +2,7 @@
 // Think of it like a programmable button - click it, then press keys you want
 
 import SwiftUI
-import Carbon
+import ApplicationServices
 import AppKit
 
 // HOTKEY RECORDER - Record custom keyboard shortcuts
@@ -101,7 +101,7 @@ struct HotkeyRecorder: View {
         let newHotkey = Hotkey(
             id: hotkey.id,  // Keep same ID
             keyCode: UInt32(keyCode),  // New key code
-            modifiers: modifierFlags,  // New modifiers
+            flags: CGEventFlags(rawValue: UInt64(modifierFlags)),  // New modifiers
             description: describeHotkey(modifierFlags, UInt32(keyCode))  // Human-readable
         )
 
@@ -153,7 +153,7 @@ struct HotkeyRecorder_Previews: PreviewProvider {
                 hotkey: .constant(Hotkey(
                     id: 1,
                     keyCode: 59,
-                    modifiers: UInt32(cmdKey | shiftKey),
+                    flags: [.maskCommand, .maskShift],
                     description: "Cmd+Shift+5"
                 ))
             )
@@ -164,7 +164,7 @@ struct HotkeyRecorder_Previews: PreviewProvider {
                 hotkey: .constant(Hotkey(
                     id: 2,
                     keyCode: 60,
-                    modifiers: UInt32(cmdKey | shiftKey),
+                    flags: [.maskCommand, .maskShift],
                     description: "Cmd+Shift+6"
                 ))
             )
