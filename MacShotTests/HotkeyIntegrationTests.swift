@@ -6,6 +6,7 @@ import XCTest
 import ApplicationServices
 @testable import MacShot
 
+@MainActor
 final class HotkeyIntegrationTests: XCTestCase {
 
     var hotkeyManager: HotkeyManager!
@@ -18,16 +19,12 @@ final class HotkeyIntegrationTests: XCTestCase {
             handlerCallCount += 1
         }
 
-        Task { @MainActor in
-            hotkeyManager = HotkeyManager(captureHandler: testCaptureHandler)
-        }
+        hotkeyManager = HotkeyManager(captureHandler: testCaptureHandler)
     }
 
     override func tearDown() {
-        Task { @MainActor in
-            hotkeyManager.unregister()
-            hotkeyManager = nil
-        }
+        hotkeyManager.unregister()
+        hotkeyManager = nil
         super.tearDown()
     }
 

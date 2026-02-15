@@ -6,6 +6,7 @@ import XCTest
 import ApplicationServices
 @testable import MacShot
 
+@MainActor
 final class HotkeyEventTapTests: XCTestCase {
 
     var hotkeyManager: HotkeyManager!

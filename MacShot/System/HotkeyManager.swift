@@ -197,6 +197,7 @@ final class HotkeyManager: ObservableObject {
         eventTap = nil
         runLoopSource = nil
         currentHotkeyTuple = nil
+        sharedHotkeyManager = nil  // Clear global reference to allow deallocation
 
         if !keepHotkeyInfo {
             currentHotkeyInfo = nil
@@ -206,6 +207,9 @@ final class HotkeyManager: ObservableObject {
     // DEINIT
     nonisolated deinit {
         currentHotkeyTuple = nil
+        // Note: sharedHotkeyManager is intentionally NOT cleared here
+        // because deinit is nonisolated and sharedHotkeyManager needs synchronized access
+        // The unregister() method should be called before deinit for proper cleanup
         // Timer cleanup happens in unregister
     }
 }

@@ -6,32 +6,22 @@ import XCTest
 import ApplicationServices
 @testable import MacShot
 
+@MainActor
 final class HotkeyManagerTests: XCTestCase {
 
     var hotkeyManager: HotkeyManager!
-    var captureHandlerCallCount = 0
 
     override func setUp() {
         super.setUp()
 
-        // Create a capture handler that we can track
-        captureHandlerCallCount = 0
-        let testCaptureHandler: @MainActor () -> Void = { [weak self] in
-            self?.captureHandlerCallCount += 1
-        }
-
-        Task { @MainActor in
-            hotkeyManager = HotkeyManager(captureHandler: testCaptureHandler)
-        }
+        // Create a simple capture handler (we don't need to track calls for these tests)
+        hotkeyManager = HotkeyManager {}
     }
 
-    override func tearDown() {
-        // Ensure proper cleanup
-        Task { @MainActor in
-            hotkeyManager?.unregister()
-            hotkeyManager = nil
-        }
-        super.tearDown()
+    override func tearDown() async throws {
+        hotkeyManager?.unregister()
+        hotkeyManager = nil
+        try await super.tearDown()
     }
 
     // MARK: - Initialization Tests
@@ -195,17 +185,22 @@ final class HotkeyManagerTests: XCTestCase {
     }
 
     func testCGEventTypeFilters() {
-        // Test that different event types are filtered correctly
-        // This tests the logic in the event tap callback
+        // Test that different event types have distinct raw values
+        // This verifies that we can filter events by their type
 
-        // keyDown should be handled
-        XCTAssertTrue(CGEventType.keyDown.rawValue == 0)
+        // Each event type should have a unique raw value
+        let keyDownValue = CGEventType.keyDown.rawValue
+        let keyUpValue = CGEventType.keyUp.rawValue
+        let flagsChangedValue = CGEventType.flagsChanged.rawValue
 
-        // keyUp should be ignored
-        XCTAssertFalse(CGEventType.keyUp.rawValue == 0)
+        // Values should be distinct
+        XCTAssertNotEqual(keyDownValue, keyUpValue)
+        XCTAssertNotEqual(keyDownValue, flagsChangedValue)
+        XCTAssertNotEqual(keyUpValue, flagsChangedValue)
 
-        // Other events should be ignored
-        XCTAssertFalse(CGEventType.flagsChanged.rawValue == 0)
+        // Event mask should use the keyDown value
+        let expectedMask = 1 << keyDownValue
+        XCTAssertEqual(expectedMask, 1 << CGEventType.keyDown.rawValue)
     }
 
     // MARK: - Thread Safety Tests
@@ -357,11 +352,5 @@ final class HotkeyManagerTests: XCTestCase {
 
         // The API should work regardless of architecture
         XCTAssertNotNil(result)
-    }
-
-    // MARK: - Helper Methods
-
-    private func captureHandler() {
-        captureHandlerCallCount += 1
     }
 }

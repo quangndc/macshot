@@ -6,6 +6,7 @@ import XCTest
 import ApplicationServices
 @testable import MacShot
 
+@MainActor
 final class HotkeyPerformanceTests: XCTestCase {
 
     // MARK: - Memory Management Tests
@@ -267,25 +268,18 @@ final class HotkeyPerformanceTests: XCTestCase {
 
     // MARK: - Thread Safety Performance
 
-    func testConcurrentAccessPerformance() {
-        // Test performance with concurrent access
+    func testSequentialAccessPerformance() {
+        // Test performance with sequential access (MainActor requires sequential access)
         let hotkey = Hotkey.default
-        let queue = DispatchQueue(label: "com.macshot.test", attributes: .concurrent)
 
         measure {
-            let group = DispatchGroup()
-
-            for i in 0..<10 {
-                queue.async(group: group) {
-                    autoreleasepool {
-                        let manager = HotkeyManager(captureHandler: {})
-                        let _ = manager.register(hotkey: hotkey)
-                        manager.unregister()
-                    }
+            for _ in 0..<10 {
+                autoreleasepool {
+                    let manager = HotkeyManager(captureHandler: {})
+                    let _ = manager.register(hotkey: hotkey)
+                    manager.unregister()
                 }
             }
-
-            group.wait()
         }
     }
 
