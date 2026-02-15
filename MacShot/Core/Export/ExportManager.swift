@@ -77,33 +77,18 @@ final class ExportManager: ObservableObject {
     // MARK: - File Save
 
     private func saveFile(_ image: NSImage, to url: URL, options: ExportOptions) async throws {
-        // Validate output directory exists and is writable
+        // Basic validation: ensure directory exists
         let directory = url.deletingLastPathComponent()
-        var isDirectory: ObjCBool = false
-        var isWritable: ObjCBool = false
-
-        if FileManager.default.fileExists(atPath: directory.path) {
-            do {
-                var resourceValues = URLResourceValues(key: .isDirectoryKey)
-                try url.getResourceValues(&resourceValues)
-                isDirectory = resourceValues.isDirectory
-                isWritable = resourceValues.isWritable
-            } catch {
-                // If validation fails, throw error
-                throw ExportError.saveFailed(Error(NSError(domain: NSPOSIXErrorDomain, code: Int(ENOENT), userInfo: nil))
-            }
+        if !FileManager.default.fileExists(atPath: directory.path) {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         }
 
-        // Additional validation: check disk space (basic check)
-        if let error = try FileManager.default.attributesOfItem(atPath: directory.path)? {
-            throw ExportError.saveFailed(error)
-        }
-
+        // Export based on format
         switch options.format {
         case .png:
             try exportPNG(image: image, to: url)
         case .jpeg:
-            tryexportJPEG(image: image, quality: options.jpegQuality, to: url)
+            try exportJPEG(image: image, quality: options.jpegQuality, to: url)
         }
     }
 
@@ -187,4 +172,3 @@ final class ExportManager: ObservableObject {
         return options
     }
 }
-                                    // Validate output directory exists and is writable                        let directory = url.deletingLastPathComponent()                        var isDirectory: ObjCBool = false                        var isWritable: ObjCBool = false                                    if FileManager.default.fileExists(atPath: directory.path) {                            do {                                var resourceValues = URLResourceValues(key: .isDirectoryKey)                                try url.getResourceValues(&resourceValues)                                isDirectory = resourceValues.isDirectory                                isWritable = resourceValues.isWritable                            } catch {                                // If validation fails, throw appropriate error                                throw ExportError.saveFailed(error)                            }                        }                                    // Additional validation: check disk space (basic check)                        if let error = try FileManager.default.attributesOfItem(atPath: directory.path) {                            throw ExportError.saveFailed(error)                        }            

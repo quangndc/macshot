@@ -63,9 +63,11 @@ final class LaunchController: ObservableObject {
     // SMAppService requires macOS 13.0 or later
     // Think of it like checking if your coffee maker has a timer feature
     func isAvailable() -> Bool {
-        // SMAppService is available if the API exists
-        // If we're on macOS 13+, this returns true
-        return SMAppService.mainApp != nil
+        // SMAppService is available on macOS 13.0+
+        if #available(macOS 13.0, *) {
+            return true
+        }
+        return false
     }
 
     // INITIALIZER - Sets up the launch controller

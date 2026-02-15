@@ -86,9 +86,9 @@ struct HotkeyRecorder: View {
 
         // Extract only the modifier bits we care about
         // This filters out things like caps lock or num lock
-        let modifierFlags: UInt32 = modifiers.intersection([
+        let modifierFlags: UInt32 = UInt32(modifiers.intersection([
             .command, .shift, .option, .control
-        ]).rawValue
+        ]).rawValue)
 
         // Require at least one modifier (no plain keys allowed)
         // This prevents conflicts with normal typing
@@ -140,13 +140,6 @@ struct HotkeyRecorder: View {
 
         // Join with + signs: "⌘⇧5" for Cmd+Shift+5
         return parts.joined(separator: "+")
-    }
-}
-
-// EXTENSION - Convert NSEvent.ModifierFlags set to raw value
-extension NSEvent.ModifierFlags {
-    var rawValue: UInt32 {
-        UInt32(self.rawValue)
     }
 }
 

@@ -30,9 +30,9 @@ enum RegionCapture {
                 // Handle cancellation
                 NotificationCenter.default.addObserver(
                     forName: NSWindow.willCloseNotification,
-                    object: overlay,  // Use [weak self] to prevent retain cycle
+                    object: overlay,
                     queue: .main
-                ) { [weak self] _ in
+                ) { _ in
                     if !resumed {
                         resumed = true
                         continuation.resume(throwing: CaptureError.regionSelectionCancelled)
