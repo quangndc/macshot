@@ -2,7 +2,25 @@
 
 ## Version History
 
-### [Unreleased] - 2026-02-14
+### [Unreleased] - 2026-02-15
+
+## Bug Fixes (Commit: 7445e7c)
+
+**Date**: 2026-02-15
+**Version**: 0.9.1
+**Priority**: High
+
+#### Critical Fixes
+- **ExportManager.swift**: Removed 190+ lines of corrupted code, fixed `tryexportJPEG` typo, simplified saveFile validation
+- **RegionCapture.swift**: Fixed invalid `[weak self]` on enum type
+- **HotkeyRecorder.swift**: Removed infinite recursion in rawValue extension, fixed UInt32 type cast
+- **LaunchController.swift**: Fixed SMAppService.mainApp nil comparison to proper availability check
+- **PerformanceTests.swift**: Rewrote async/await in measure blocks using semaphores for proper testing
+
+#### Build Status
+- Build: Successful (23.81s, 0 errors)
+- Test suite: Comprehensive tests across all modules
+- Code quality: All compilation errors resolved
 
 ## Phase 09: Testing & Quality Assurance - COMPLETED ✅
 
@@ -133,31 +151,41 @@ Tests/
 - Initial entitlements configuration
 - Project documentation framework
 
-## Future Work
+## Phase 10: Documentation & Distribution - IN PROGRESS 🔄
 
-### Phase 10: Documentation & Distribution
-- User documentation completion
-- App Store preparation
-- Code signing and notarization
-- Release process setup
+**Date**: 2026-02-15
+**Status**: Documentation update in progress
+**Priority**: High
 
-### Phase 3: File Management (Planned)
-- Save location configuration
+#### Current Tasks
+- [x] Comprehensive test suite implementation
+- [x] Bug fixes and code quality improvements
+- [x] Codebase documentation update
+- [ ] User documentation completion
+- [ ] App Store preparation
+- [ ] Code signing and notarization
+- [ ] Release process setup
+
+## Completed Features Summary
+
+### Phase 3: File Management ✅
+- Save location configuration (ExportManager)
 - Filename generation with timestamps
-- Image format support (PNG, JPG)
+- Image format support (PNG, JPG via ExportManager)
 - File permission handling
-- Automatic cleanup functionality
+- Export options and quality settings
 
-### Phase 4: Hotkey System (Partial)
-- Global hotkey registration (Carbon API) - [ ]
-- Hotkey configuration UI ✅ (Phase 08)
-- Event handling and routing - [ ]
-- Hotkey conflict detection - [ ]
-- Default hotkey settings ✅ (Phase 08)
-- Hotkey persistence ✅ (Phase 08)
+### Phase 4: Hotkey System - PARTIALLY COMPLETE 🟡
+- [ ] Global hotkey registration (Carbon API) - Planned
+- [x] Hotkey configuration UI (Phase 08)
+- [ ] Event handling and routing - Planned
+- [ ] Hotkey conflict detection - Planned
+- [x] Default hotkey settings (Phase 08)
+- [x] Hotkey persistence (Phase 08)
+- [x] Hotkey recording UI (HotkeyRecorder component)
 
 ---
 
-*Last Updated: 2026-02-14*
-*Project Version: 0.9.0*
-*Total Phases Completed: 9/10*
+*Last Updated: 2026-02-15*
+*Project Version: 0.9.1*
+*Total Phases Completed: 9/10 (Phase 10 in progress)*

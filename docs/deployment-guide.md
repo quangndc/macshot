@@ -37,6 +37,7 @@ let package = Package(
             name: "MacShot",
             dependencies: [],
             path: "MacShot",
+            sources: ["Core/**", "Features/**", "System/**", "UI/**", "*.swift"],
             resources: []
         )
     ]
@@ -254,7 +255,7 @@ xcrun altool --notarize-app \
 #### App Information
 - **Name**: MacShot
 - **Bundle ID**: com.macshot.app
-- **Version**: 1.0.0
+- **Version**: 0.9.1 (current), 1.0.0 (target)
 - **Category**: Utilities
 - **Age Rating**: 4+
 
@@ -479,5 +480,6 @@ tccutil Accessibility com.macshot.app
 - **GitHub Issues**: Bug reports and feature requests
 
 ---
-*Last Updated: 2026-02-14*
-*Deployment Guide Version: 1.0.0*
+*Last Updated: 2026-02-15*
+*Deployment Guide Version: 1.1.0*
+*Current Project Version: 0.9.1*

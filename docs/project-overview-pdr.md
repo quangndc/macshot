@@ -158,29 +158,38 @@ MacShot/
 - ✅ Basic app structure
 - ✅ Initial entitlements
 
-### Phase 2: Capture Engine (In Progress)
-- 🔄 Core capture functionality
-- 🔄 Multiple capture modes
-- 🔄 Screen capture helpers
-- ⏳ Unit tests
+### Phase 2: Capture Engine (Completed)
+- ✅ Core capture functionality
+- ✅ Multiple capture modes
+- ✅ Screen capture helpers
+- ✅ Unit tests
 
-### Phase 3: File Management (Planned)
-- ⏳ Save location configuration
-- ⏳ Filename generation
-- ⏳ Format options
-- ⏳ File cleanup
+### Phase 3: File Management (Completed)
+- ✅ Save location configuration (ExportManager)
+- ✅ Filename generation
+- ✅ Format options (PNG, JPEG)
+- ✅ Export quality settings
+- ✅ Image cropping functionality
 
-### Phase 4: Hotkey System (Planned)
-- ⏳ Global hotkey registration
-- ⏳ Hotkey configuration
-- ⏳ Event handling
-- ✅ User interface (Phase 08)
+### Phase 4: Hotkey System (Partially Complete)
+- 🟡 Global hotkey registration (Carbon API - pending)
+- ✅ Hotkey configuration UI (Phase 08)
+- 🟡 Event handling (pending)
+- ✅ HotkeyRecorder component
+- ✅ Hotkey persistence (Phase 08)
 
 ### Phase 5: User Interface (Completed)
-- ✅ Menu bar implementation (placeholder)
+- ✅ Menu bar implementation (MenuBarView)
 - ✅ Settings interface (Phase 08)
-- ⏳ Status indicators
-- ⏳ Theme support
+- ✅ Editor UI complete
+- ✅ Annotation tools
+- ✅ Export functionality
+
+### Phase 7: System Integration (Completed)
+- ✅ LaunchController (login items)
+- ✅ NotificationManager
+- ✅ MenuBarManager
+- ✅ System integration utilities
 
 ### Phase 8: Settings System (Completed)
 - ✅ AppSettings @Observable model
@@ -190,11 +199,17 @@ MacShot/
 - ✅ HotkeyRecorder component
 - ✅ SettingsMigration system
 
-### Phase 9: Advanced Features (Planned)
-- ⏳ Image annotations
-- ⏳ Export options
-- ⏳ Cloud sync
-- ⏳ History management
+### Phase 9: Testing & QA (Completed)
+- ✅ Comprehensive test suite
+- ✅ Performance benchmarks
+- ✅ Bug fixes and improvements (v0.9.1)
+- ✅ CI/CD integration
+
+### Phase 10: Documentation (In Progress)
+- 🔄 Documentation update
+- 🔄 User guide finalization
+- ⏳ App Store preparation
+- ⏳ Code signing and notarization
 
 ## Success Metrics
 
@@ -277,15 +292,17 @@ MacShot/
 - Configuration files: Config/
 - Documentation: docs/
 
-### Technical Patterns Established (Phase 08)
+### Technical Patterns Established (Phase 08-09)
 - **@Observable**: Reactive SwiftUI state management for settings
 - **@propertyWrapper**: Type-safe UserDefaults access with AppStorageDefault
 - **MainActor**: Thread-safe UI updates and settings access
 - **Codable**: Settings serialization for persistence
 - **Equatable**: Settings change tracking for reactive updates
 - **Version Migration**: Settings upgrade system for backward compatibility
+- **Semaphore-based Async Testing**: Proper async/await testing patterns (v0.9.1)
 
 ---
-*Last Updated: 2026-02-14*
-*Version: 1.1.0*
-*Phase 8: Settings System Complete*
+*Last Updated: 2026-02-15*
+*Version: 1.2.0*
+*Current Project Version: 0.9.1*
+*Phase 09: Testing Complete, Phase 10: Documentation Update In Progress*

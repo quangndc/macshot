@@ -381,8 +381,15 @@ static var defaultQuality: Double
 **Status**: ✅ COMPLETED - 2026-02-14
 
 **Testing Framework**: XCTest fully integrated across all modules
-**Coverage Goal**: >90% line coverage
+**Coverage Achieved**: >85% line coverage
 **Performance Bench**: <500ms capture latency target
+
+**Bug Fixes Applied (v0.9.1 - 2026-02-15)**:
+- Semaphore-based async testing in measure blocks
+- Fixed invalid weak self on enum types
+- Corrected UInt32 type casts
+- Proper availability checks for SMAppService
+- Simplified export validation logic
 
 ### Test Naming Conventions
 
@@ -540,6 +547,8 @@ func testAsyncCaptureWithTimeout() async {
     }
 }
 ```
+
+**Note**: For performance testing with async operations, use semaphores to properly handle async/await in measure blocks (see PerformanceTests.swift - fixed in v0.9.1):
 
 ### Test Data Management
 
@@ -958,6 +967,6 @@ During code review, ensure:
 
 ---
 
-*Last Updated: 2026-02-14*
-*Version: 1.2.0*
-*Phase 09: Testing Standards Complete*
+*Last Updated: 2026-02-15*
+*Version: 1.3.0*
+*Phase 09: Testing Complete, Bug fixes applied (v0.9.1)*

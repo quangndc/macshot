@@ -225,7 +225,7 @@ final class WindowCapture {
 - Dropdown menu with options
 - Status indicators
 - Settings access
-**Status**: Placeholder implementation
+**Status**: Implemented (MenuBarView.swift + MenuBarManager.swift)
 
 #### Editor UI Module
 **Purpose**: Full-featured screenshot annotation editor
@@ -275,18 +275,21 @@ struct EditorView: View {
 - Real-time preview
 - Confirm/cancel options
 - Keyboard shortcuts
-**Status**: Planned
+**Status**: Implemented (RegionSelectionOverlay.swift)
 
 ### 4. System Integration Layer
 
 #### HotkeyManager
 **Purpose**: Global hotkey management
-**Implementation**: Carbon API integration
+**Implementation**: Carbon API integration (planned), UI components complete
 **Features**:
-- Register global hotkeys
+- Register global hotkeys (Carbon API pending)
 - Handle key combinations
 - Event processing
 - Conflict resolution
+- Hotkey recording UI (HotkeyRecorder.swift - complete)
+
+**Status**: UI components complete (Phase 08), Carbon API integration pending
 
 ```swift
 class HotkeyManager {
@@ -847,6 +850,6 @@ func measureCapturePerformance() {
 
 ---
 
-*Last Updated: 2026-02-14*
-*Architecture Version: 1.4.0*
-*Phase 09: Testing Infrastructure Complete*
+*Last Updated: 2026-02-15*
+*Architecture Version: 1.5.0*
+*Phase 09: Testing Complete, Bug fixes applied (v0.9.1)*

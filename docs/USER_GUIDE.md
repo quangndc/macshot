@@ -309,9 +309,10 @@ Customize capture hotkeys:
 
 ## Support
 
-- **Issues**: Report at [github.com/yourname/macshot/issues]
+- **Issues**: Report at [github.com/yourusername/macshot/issues](https://github.com/yourusername/macshot/issues)
 - **Feature Requests**: Use GitHub issues with "enhancement" label
 - **Discussions**: Use GitHub Discussions for questions
+- **Documentation**: See [docs/](./) for technical documentation
 
 ---
 

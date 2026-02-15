@@ -73,19 +73,26 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 3: File Management 📅 PLANNED
-*Estimated Start: Week 4-5*
+### Phase 3: File Management ✅ COMPLETED
+*Status: Completed - 2026-02-14*
 
 **Duration**: 1 day (actual)
 **Priority**: High
 
-**Planned Tasks**:
-- [ ] Save location configuration
-- [ ] Filename generation with timestamps
-- [ ] Image format support (PNG, JPG)
-- [ ] File permission handling
-- [ ] Automatic cleanup functionality
-- [ ] File organization features
+**Completed Tasks**:
+- [x] Save location configuration (via ExportManager)
+- [x] Filename generation with timestamps
+- [x] Image format support (PNG, JPG via ExportManager)
+- [x] File permission handling
+- [x] Export options and quality settings
+- [x] Image cropping functionality (ImageCropper)
+- [x] Aspect ratio handling (AspectRatio)
+
+**Key Components**:
+- ExportManager: Central export coordination
+- PNGExporter/JPEGExporter: Format-specific implementations
+- ImageCropper: Precise image cropping
+- ExportOptions: Configuration model
 
 **Technical Requirements**:
 - FileManager integration
@@ -106,19 +113,23 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 4: Hotkey System 📅 PLANNED
-*Estimated Start: Week 6-7*
+### Phase 4: Hotkey System 🟡 PARTIALLY COMPLETE
+*Status: Partially Complete - 2026-02-15*
 
-**Duration**: 1 day (actual)
+**Duration**: Settings UI complete (Phase 08)
 **Priority**: High
 
-**Planned Tasks**:
-- [ ] Global hotkey registration (Carbon API)
+**Completed Tasks**:
 - [x] Hotkey configuration UI (Phase 08)
-- [ ] Event handling and routing
-- [ ] Hotkey conflict detection
 - [x] Default hotkey settings (Phase 08)
 - [x] Hotkey persistence (Phase 08)
+- [x] HotkeyRecorder component for interactive recording (Phase 08)
+- [x] Settings integration with HotkeyManager (Phase 08)
+
+**Remaining Tasks**:
+- [ ] Global hotkey registration (Carbon API)
+- [ ] Event handling and routing
+- [ ] Hotkey conflict detection
 
 **Technical Requirements**:
 - Carbon API integration
@@ -348,15 +359,20 @@ This roadmap outlines the development phases and milestones for the MacShot proj
 
 ---
 
-### Phase 10: Documentation & Distribution 📅 PLANNED
-*Estimated Start: Week 13-14*
+### Phase 10: Documentation & Distribution 🔄 IN PROGRESS
+*Status: In Progress - 2026-02-15*
 
-**Duration**: 2 weeks
+**Duration**: 2 weeks (estimated)
 **Priority**: High
 
+**Completed Tasks**:
+- [x] Comprehensive test suite (Phase 09)
+- [x] Bug fixes and code quality improvements (7445e7c)
+- [x] Documentation review and update
+
 **Planned Tasks**:
-- [ ] User documentation
-- [ ] Developer documentation
+- [ ] User documentation finalization
+- [ ] Developer documentation completion
 - [ ] App Store preparation
 - [ ] Code signing and notarization
 - [ ] Release process setup
@@ -593,22 +609,24 @@ gantt
 ### Phase Completion Progress
 - **Phase 1**: ✅ Project Setup - Completed
 - **Phase 2**: ✅ Capture Engine - Completed
-- **Phase 3**: 📅 File Management - Planned
-- **Phase 4**: 📅 Hotkey System - Partially Complete
+- **Phase 3**: ✅ File Management - Completed
+- **Phase 4**: 🟡 Hotkey System - Partially Complete (Settings UI done, Carbon API pending)
 - **Phase 5**: ✅ User Interface - Completed
 - **Phase 6**: 📅 Advanced Features - Planned
-- **Phase 7**: 📅 Advanced Features - Planned
+- **Phase 7**: ✅ System Integration - Completed
 - **Phase 8**: ✅ Settings Persistence - Completed
 - **Phase 9**: ✅ Testing & QA - Completed
-- **Phase 10**: 📅 Documentation & Release - Planned
+- **Phase 10**: 🔄 Documentation & Release - In Progress
 
 ### Total Progress
-- **9 out of 10 phases completed** (90%)
+- **9 out of 10 phases substantially complete** (90%)
+- **Phase 4 partially complete (UI done, system integration pending)**
+- **Phase 10 in progress (documentation update)**
 - **All critical testing infrastructure complete**
-- **Ready for Phase 10: Documentation & Release**
+- **Code quality improved and bugs fixed (v0.9.1)**
 
 ---
 
-*Last Updated: 2026-02-14*
-*Roadmap Version: 1.2.0*
-*Phase 9: Testing Complete*
+*Last Updated: 2026-02-15*
+*Roadmap Version: 1.3.0*
+*Phase 9: Testing Complete, Phase 10: Documentation Update In Progress*

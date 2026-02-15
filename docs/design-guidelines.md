@@ -765,6 +765,7 @@ Color.background       // #F5F5F7 / #1E1E1E (adaptive)
 
 ---
 
-*Last Updated: 2026-02-14*
-*Design Guidelines Version: 1.1.0*
+*Last Updated: 2026-02-15*
+*Design Guidelines Version: 1.2.0*
 *Phase 03: Design System Complete*
+*Project Version: 0.9.1*
