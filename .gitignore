@@ -101,3 +101,6 @@ Generated/
 
 # SwiftLint
 .swiftlint.yml
+
+# Repomix
+repomix-output.xml
