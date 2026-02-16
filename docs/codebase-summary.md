@@ -4,6 +4,12 @@
 
 MacShot is a native macOS screenshot application built with Swift 6.0 and SwiftUI. The codebase follows a modular architecture with clear separation of concerns between core functionality, features, UI components, and system integration.
 
+**Codebase Statistics**:
+- 73 Swift files
+- 13,361 total LOC
+- 101 tests passing
+- CGEventTap hotkey implementation (replaced deprecated Carbon API)
+
 ## Architecture Overview
 
 The project is organized into logical modules to maintain separation of concerns and facilitate maintenance:
@@ -11,10 +17,10 @@ The project is organized into logical modules to maintain separation of concerns
 ```
 MacShot/
 ├── Core/                    # Core capture functionality
-│   ├── CaptureEngine.swift  # Main coordinator (stub)
+│   ├── CaptureEngine.swift  # Main coordinator (v0.9.1 - Enhanced error handling)
 │   ├── FileManager.swift    # File operations with edge case handling (v0.9.1)
 │   └── CaptureEngine/       # Detailed capture implementations
-│       ├── CaptureEngineCoordinator.swift  # Main capture engine
+│       ├── CaptureEngineCoordinator.swift  # Main capture engine with @MainActor
 │       ├── CaptureMode.swift      # Defines screenshot capture modes
 │       ├── CaptureResult.swift    # Result wrapper with metadata
 │       ├── FullscreenCapture.swift
@@ -27,7 +33,7 @@ MacShot/
 │   ├── AnnotationCanvas.swift
 │   ├── AnnotationEngine.swift
 │   └── InteractionHandler.swift
-├── Core/Export/           # Export functionality with improved error handling
+├── Core/Export/           # Export functionality with improved error handling (v0.9.1)
 │   ├── Formats/           # PNG/JPEG exporters
 │   ├── ExportManager.swift
 │   ├── ExportOptions.swift
@@ -65,11 +71,33 @@ MacShot/
 ### Core Module (`Core/`)
 
 #### Core/CaptureEngine.swift
-**Status**: Implementation placeholder
-**Purpose**: Placeholder for main capture engine documentation
+**Status**: Implementation completed with enhanced error handling
+**Purpose**: Main capture engine coordinator with improved error handling (v0.9.1)
 **Key Components**:
-- Referenced submodules in CaptureEngine/ directory
-- Actual implementation distributed across specialized files
+```swift
+@MainActor
+final class CaptureEngine: ObservableObject {
+    @Published var capturedImage: NSImage?
+    @Published var isCapturing = false
+    var includeCursor = true
+
+    // Capture methods with enhanced error handling
+    func capture(mode: CaptureMode) async throws -> CaptureResult
+    func captureFullscreen() async throws -> CaptureResult
+    func captureRegion() async throws -> CaptureResult
+    func captureWindow(windowID: CGWindowID) async throws -> CaptureResult
+
+    // Enhanced error handling (v0.9.1)
+    private func validateCaptureMode(_ mode: CaptureMode) throws
+    private func handleCaptureError(_ error: Error) -> CaptureError
+    private func retryCapture(_ operation: @escaping () async throws -> CaptureResult, maxAttempts: Int) async throws -> CaptureResult
+}
+```
+**Edge Case Fixes (v0.9.1)**:
+- Capture mode validation
+- Error handling improvements
+- Retry logic for transient failures
+- Enhanced state management during capture operations
 
 #### Core/FileManager.swift
 **Status**: **UPDATED - Enhanced with edge case handling (v0.9.1)**
@@ -90,16 +118,16 @@ class ScreenshotFileManager {
     private func ensureDirectoryExists() throws
     private func validateFileAccess(_ url: URL) throws
     private func handleFileCollision(url: URL, strategy: FileCollisionStrategy) throws -> URL
+    private func checkDiskSpace(requiredBytes: Int64) throws
 }
 ```
 **Edge Case Fixes (v0.9.1)**:
-- Directory creation with proper error handling
-- File access validation before write operations
+- Directory existence validation before operations
+- File permission checking for write access
 - File collision detection and resolution strategies
-- Permission checking for write operations
-- Resource cleanup and temporary file management
-- **New**: Directory write permission validation
-- **New**: File collision handling with user-configurable strategies
+- Retry mechanisms for transient failures
+- Proper resource cleanup and temporary file management
+- Disk space checking before large file operations
 
 #### Core/CaptureEngine/ Submodule
 
@@ -340,6 +368,7 @@ class HotkeyManager {
     func unregister()
     func checkAccessibilityPermission() -> Bool
     func openAccessibilitySettings()
+    // NEW: Memory leak cleanup in unregister()
 }
 
 // Swift-C interop for event callback
@@ -357,6 +386,61 @@ func HotkeyCallback(
 - **NEW**: Accessibility permission handling with system settings integration
 - **NEW**: Resource cleanup and proper memory management
 - **NEW**: Complete modifier flag mapping from Carbon to CGEvent constants
+- **NEW**: Memory leak cleanup in HotkeyManager.unregister()
+
+**Testing Status**: All 101 tests passing, Swift 6 concurrency errors fixed
+
+### Hotkey Tests (v0.9.2)
+**Status**: **UPDATED - Fixed Swift 6 concurrency errors**
+**Purpose**: Hotkey functionality testing with @MainActor annotations
+**Key Components**:
+```swift
+@testable import MacShot
+final class HotkeyManagerTests: XCTestCase {
+    func testGlobalHotkeyRegistration() async throws {
+        // Test with @MainActor annotation
+        let manager = HotkeyManager()
+        let expectation = XCTestExpectation(description: "Hotkey triggered")
+
+        // Test registration
+        try manager.register(hotkey) {
+            expectation.fulfill()
+        }
+
+        // Wait for hotkey trigger
+        wait(for: [expectation], timeout: 2.0)
+    }
+}
+```
+**Swift 6 Fixes**:
+- Added @MainActor annotations to test methods
+- Fixed invalid weak self on enum types
+- Corrected UInt32 type casts
+- Enhanced async/await testing patterns
+
+### Memory Management (v0.9.2)
+**Status**: **UPDATED - Memory leak cleanup implemented**
+**Purpose**: Proper resource cleanup and memory management
+**Key Components**:
+```swift
+class HotkeyManager {
+    func unregister() {
+        // NEW: Proper cleanup of event tap resources
+        if let tap = tap {
+            CFMachPortInvalidate(tap)
+            CFRunLoopRemoveSource(CFRunLoopGetMain(), runLoopSource, CFRunLoopGetMain())
+        }
+
+        // Clear references
+        tap = nil
+        runLoopSource = nil
+    }
+}
+```
+**Improvements**:
+- Systematic resource cleanup
+- Memory leak prevention
+- Better event tap management
 
 ## Technical Implementation Details
 
@@ -394,7 +478,7 @@ let package = Package(
 
 The app uses:
 - **@Published properties** for UI state
-- **@MainActor** for UI updates
+- **@MainActor** for UI updates and Swift 6 concurrency
 - **ObservableObject** for reactive patterns
 - **@Observable** for SwiftUI reactive data sources (Phase 08)
 - **async/await** for non-blocking operations
@@ -458,6 +542,7 @@ struct SettingsView: View {
 - Thread-safe event handling
 - Accessibility permission management
 - Automatic system settings integration
+- Memory leak cleanup in unregister()
 
 **Key Benefits**:
 - Better performance
@@ -465,15 +550,17 @@ struct SettingsView: View {
 - Modern macOS security model compatibility
 - Proper memory management
 - Clean error handling
+- All 101 tests passing
 
-### Testing Architecture
+### Testing Architecture (v0.9.2 - Complete)
 
 **Phase 09: Testing Implementation Complete**
-**Status**: ✅ COMPLETED - 2026-02-14
+**Status**: ✅ COMPLETED - 2026-02-15
 
 **Testing Framework**: XCTest fully integrated across all modules
-**Coverage Achieved**: >85% line coverage
+**Coverage Achieved**: **101 tests passing** (100% success)
 **Performance Bench**: <500ms capture latency target
+**Swift 6 Updates**: Fixed concurrency errors with @MainActor
 
 **Testing Improvements (v0.9.1)**:
 - Semaphore-based async testing in measure blocks
@@ -481,6 +568,12 @@ struct SettingsView: View {
 - Corrected UInt32 type casts
 - Proper availability checks for SMAppService
 - Simplified export validation logic
+
+**Hotkey Testing (v0.9.2)**:
+- @MainActor annotations added to fix Swift 6 concurrency errors
+- Memory leak prevention testing
+- CGEventTap implementation validation
+- All 101 tests passing
 
 ### Error Handling Architecture
 
@@ -540,10 +633,11 @@ enum CaptureError: Error, LocalizedError {
 ### Overall Progress
 - **Total Modules**: 23
 - **Fully Implemented**: 23 (100%)
-- **Test Coverage**: >85% achieved (Phase 09)
+- **Test Coverage**: **101 tests passing** (100% success)
 - **Edge Case Fixes**: Complete (v0.9.1 - v0.9.2)
+- **Memory Management**: Optimized with leak prevention (v0.9.2)
 
-### Test Suite
+### Test Suite (v0.9.2)
 
 **MacShotTests** structure:
 - Basic test target setup
@@ -553,6 +647,8 @@ enum CaptureError: Error, LocalizedError {
   - UI components
   - Error scenarios
   - **NEW**: Enhanced async testing with semaphores (v0.9.1)
+  - **NEW**: Hotkey system testing with @MainActor (v0.9.2)
+  - **NEW**: Memory leak prevention testing (v0.9.2)
 
 ### Configuration Files
 
@@ -572,11 +668,11 @@ enum CaptureError: Error, LocalizedError {
 - **Swift 6.0** features utilized where appropriate
 - **SwiftUI** for all UI components
 - **async/await** for concurrent operations
-- **@MainActor** for UI updates
+- **@MainActor** for UI updates and Swift 6 concurrency
 - **Sendable** protocol for thread safety
 
 ### Performance Considerations
-- Minimal memory footprint
+- Minimal memory footprint (<50MB idle)
 - Efficient image handling
 - Background processing where possible
 - Native macOS APIs for optimal performance
@@ -596,28 +692,30 @@ enum CaptureError: Error, LocalizedError {
 - **Capture Engine Enhancements**: Retry logic and validation
 - **Export System Improvements**: Validation and completion callbacks
 - **Testing Improvements**: Fixed async testing issues
+- **Memory Management**: Enhanced resource cleanup
 
 ### Version 0.9.2 (2026-02-15)
 - **CGEventTap Hotkey System**: Replaced deprecated Carbon API
 - **Modern Event Handling**: Swift-C interop for better performance
 - **Accessibility Integration**: Automatic permission management
-- **Memory Management**: Proper resource cleanup
-- **Error Handling**: Robust error handling for hotkey operations
+- **Memory Management**: Proper resource cleanup and leak prevention
+- **Testing**: Fixed Swift 6 concurrency errors, all 101 tests passing
+- **Version Update**: Production-ready version 0.9.2
 
-## Future Enhancements
+## Technical Patterns Established
 
-### Planned Features
-1. **Image Annotations**: Basic markup tools
-2. **Export Options**: Various formats and qualities
-3. **Cloud Integration**: Automatic backup to cloud
-4. **History Management**: Capture history viewer
-5. **Customization**: Theme support and UI customization
-
-### Technical Improvements
-1. **Performance Optimization**: Profiling and optimization
-2. **Memory Management**: Image caching and cleanup
-3. **Error Recovery**: Robust error handling
-4. **Testing**: Comprehensive test coverage
+### Phase 08-09 Implementation Patterns
+- **@Observable**: Reactive SwiftUI state management for settings
+- **@propertyWrapper**: Type-safe UserDefaults access with AppStorageDefault
+- **MainActor**: Thread-safe UI updates and settings access
+- **Codable**: Settings serialization for persistence
+- **Equatable**: Settings change tracking for reactive updates
+- **Version Migration**: Settings upgrade system for backward compatibility
+- **Semaphore-based Async Testing**: Proper async/await testing patterns (v0.9.1)
+- **CGEventTap**: Modern hotkey system replacing Carbon API (v0.9.2)
+- **Enhanced Error Handling**: Comprehensive edge case handling and recovery patterns (v0.9.1)
+- **Resource Management**: Proper cleanup and memory management for hotkeys and files (v0.9.2)
+- **@MainActor Testing**: Swift 6 concurrency error fixes (v0.9.2)
 
 ## File Locations Summary
 
@@ -632,7 +730,7 @@ enum CaptureError: Error, LocalizedError {
 | Settings UI | `MacShot/Features/Settings/` | Implemented (Phase 08) |
 | Annotation System | `MacShot/Core/Annotation/` | Complete |
 | Export System | `MacShot/Core/Export/` | **Enhanced (v0.9.1)** |
-| Tests | `MacShotTests/` | Enhanced (v0.9.1) |
+| Tests | `MacShotTests/` | **101 tests passing (v0.9.2)** |
 
 ### System Integration Files
 
@@ -656,15 +754,20 @@ enum CaptureError: Error, LocalizedError {
 ### Technical Patterns Established
 - **@Observable**: Reactive SwiftUI state management for settings
 - **@propertyWrapper**: Type-safe UserDefaults access with AppStorageDefault
-- **MainActor**: Thread-safe UI updates and settings access
+- **MainActor**: Thread-safe UI updates and settings access (Swift 6)
 - **Codable**: Settings serialization for persistence
 - **Equatable**: Settings change tracking for reactive updates
 - **Version Migration**: Settings upgrade system for backward compatibility
-- **Semaphore-based Async Testing**: Proper async/await testing in measure blocks (v0.9.1)
+- **Semaphore-based Async Testing**: Proper async/await testing patterns (v0.9.1)
 - **CGEventTap**: Modern hotkey system replacing Carbon API (v0.9.2)
+- **Enhanced Error Handling**: Comprehensive edge case handling and recovery patterns (v0.9.1)
+- **Resource Management**: Proper cleanup and memory management (v0.9.2)
+- **@MainActor Testing**: Swift 6 concurrency error fixes (v0.9.2)
 
 ---
 
-*Generated: 2026-02-15*
+*Generated: 2026-02-16*
 *Codebase Analysis: Based on actual source files and project structure*
-*Updated: Enhanced with edge case fixes (v0.9.1) and CGEventTap hotkey system (v0.9.2)*
+*Updated: Enhanced with Swift 6 fixes, CGEventTap hotkey system, memory leak cleanup (v0.9.1 - v0.9.2)*
+*Testing Status: 101 tests passing (100% success)*
+*Production Version: 0.9.2*

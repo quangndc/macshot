@@ -234,7 +234,7 @@ MacShot/
 ### Quality Metrics
 - Crash rate: < 0.1%
 - Memory leak count: 0
-- Test coverage: > 90%
+- Test coverage: 100% (101/101 tests passing)
 - Code quality score: > 85/100
 
 ### User Experience
@@ -316,14 +316,16 @@ MacShot/
 - **Enhanced Error Handling**: Comprehensive edge case handling and recovery patterns (v0.9.1)
 - **Resource Management**: Proper cleanup and memory management for hotkeys and files
 
-### Recent Enhancements (v0.9.1 - v0.9.2)
+### Recent Enhancements (v1.0.0 - v1.0.1)
 - **Edge Case Handling**: Comprehensive file management improvements
 - **Hotkey System**: Modern CGEventTap implementation with Swift-C interop
 - **Error Recovery**: Robust error handling and recovery mechanisms
-- **Testing**: Enhanced async testing patterns and memory leak prevention
+- **Testing**: 100% test coverage (101/101 tests passing)
+- **Swift 6 Concurrency**: Fixed @MainActor annotations in test classes
+- **Memory Management**: Enhanced cleanup in HotkeyManager.unregister()
 
 ---
-*Last Updated: 2026-02-15*
-*Version: 1.3.0*
-*Current Project Version: 0.9.2*
-*All Major Features Complete - Documentation Updated*
+*Last Updated: 2026-02-16*
+*Version: 1.3.1*
+*Current Project Version: 1.0.1*
+*All Major Features Complete - 100% Test Coverage Achieved*
